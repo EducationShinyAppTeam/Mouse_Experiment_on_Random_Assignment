@@ -10,7 +10,7 @@ library(boastUtils)
 ##Mouse app
 
 #Use jscode to for reset button to reload the app
-jsResetCode <- "shinyjs.reset = function() {history.go(0)}"
+# jsResetCode <- "shinyjs.reset = function() {history.go(0)}"
 
 
 ui <- list(
@@ -87,11 +87,9 @@ ui <- list(
           ),
           br(),
           h2("Acknowledgements"),
-          p("This app was oringinally developed and coded by Yuxin Zhang and update by Luxin 
-            Wang and Thomas McIntyre based on extending the idea in the", 
-            tags$a(href = "https://www.causeweb.org/cause/archive/mouse_experiment/",
-                  "app by Dennis Pearl and Tom Santner", class = "bodylinks"),". The current version 
-                  of the app was modified by Chenese Gray."),
+          p("This app was oringinally developed and coded by Yuxin Zhang and updated by Luxin 
+            Wang and Thomas McIntyre based on extending the idea by Dennis Pearl and Tom Santner. 
+            The current version of the app was modified by Chenese Gray."),
           div(class = "updated", "Last Update: 07/16/20 by C.G.")
           ),
           tabItem(
@@ -99,13 +97,13 @@ ui <- list(
             fluidPage(
               #Use jscode to for reset button to reload the app
               useShinyjs(),
-              extendShinyjs(text = jsResetCode),
+              # extendShinyjs(text = jsResetCode),
               #Use jscode to disable all the buttons
-              tags$head(
-                tags$script
-                  (HTML('Shiny.addCustomMessageHandler("jsCode",
-                        function(message) {console.log(message)
-                        eval(message.code);};'))),
+              # tags$head(
+              #   tags$script
+              #     (HTML('Shiny.addCustomMessageHandler("jsCode",
+              #           function(message) {console.log(message)
+              #           eval(message.code);};'))),
               h2("Please choose 10 Mice for the Raspberry Treatment"),
               br(),
               #Display all the mice in main panel
@@ -147,9 +145,9 @@ ui <- list(
               ),
               br(),hr(),
               fluidRow(
-                column(3,h3("You have selected")),
+                column(4,p("You have selected")),
                 column(1,textOutput("number")),
-                column(1,h3("mice"))
+                column(1,p("mice"))
               ),
               fluidRow(
                 column(2,offset = 1, bsButton("reset_button", "Reset", icon = icon("refresh"), size = "large")),
@@ -181,15 +179,15 @@ ui <- list(
                       wellPanel(
                         fluidRow(
                            column(2,""), 
-                           column(2,"Total selected"), 
-                           column(2,"Average Weight (g)"), 
-                           column(2,"Average Age (wks)"), 
-                           column(2,"Average Tumor Mass (mg)"), 
-                           column(1,"Proportion Female"), 
-                           column(1,"Proportion Brown")
+                           column(2,strong("Total selected")), 
+                           column(2,strong("Average Weight (g)")), 
+                           column(2,strong("Average Age (wks)")), 
+                           column(2,strong("Average Tumor Mass (mg)")), 
+                           column(1,strong("Proportion Female")), 
+                           column(1,strong("Proportion Brown"))
                           ), 
                           fluidRow(
-                            column(2,"Rspb.Group"), 
+                            column(2,strong("Rspb.Group")), 
                             column(2,"10"), 
                             column(2,textOutput("aveWeight")), 
                             column(2,textOutput("aveAge")), 
@@ -198,7 +196,7 @@ ui <- list(
                             column(1,textOutput("col"))
                           ),
                           fluidRow(
-                            column(2,"Control Group"), 
+                            column(2,strong("Control Group")), 
                             column(2,"10"), 
                             column(2,textOutput("aveWeightC")), 
                             column(2,textOutput("aveAgeC")), 
@@ -249,11 +247,13 @@ ui <- list(
           ),
           tabItem(
             tabName = "computer",
+            useShinyjs(),
             fluidPage(
               wellPanel(
                 fluidRow(
-                  column(2,numericInput("times", label = NULL, value = 1, min = 1)),
-                  column(9,h4("Enter number to run multiple trials. (Hint: Try entering 10, 100, 1000, etc.)"))
+                  column(2,sliderInput(inputId = "times", label = "Number of Simulations", value = 1, min = 1, max = 1000)),
+                  column(8,h4("Select a number to run multiple trials. (Hint: Try selecting 10, 100, 1000, etc.)")),
+                  # column(2, actionButton(inputId = "stop", label = "Stop Simulation", size = "medium"))
                 )
               ),
               conditionalPanel(
