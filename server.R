@@ -323,8 +323,10 @@ shinyServer(function(input, output,session) {
            diffWeight = diffWeight, diffAge = diffAge, diffTum = diffTum, aveDiff = meanDiff, exp = exp)
 
   })
-
-
+#Using the Freedman-Diaconis Rule for bin widths
+binwidth <- function(x) {
+    2 * IQR(x) / (length(x)^(1/3))
+}
 
   output$computerTable <- renderTable({
     table()$aveTable
@@ -353,7 +355,7 @@ shinyServer(function(input, output,session) {
   output$compWeightHist = renderPlot({
     qplot(table()$diffWeight,
           geom="histogram",
-          binwidth = 1.3,
+          binwidth = binwidth(table()$diffWeight),
           main = "Differences in Weight between groups (g)",
           xlab = "Weight (g)",
           fill=I("#1C2C5B"),
@@ -365,7 +367,7 @@ shinyServer(function(input, output,session) {
   output$compAgeHist = renderPlot({
     qplot(table()$diffAge,
           geom="histogram",
-          binwidth = 0.3,
+          binwidth = binwidth(table()$diffAge),
           main = "Differences in Age between groups (wks)",
           xlab = "Age (wks)",
           fill=I("#1C2C5B"),
@@ -377,7 +379,7 @@ shinyServer(function(input, output,session) {
   output$compTumorHist = renderPlot({
     qplot(table()$diffTum,
           geom="histogram",
-          binwidth = 10,
+          binwidth = binwidth(table()$diffTum),
           main = "Differences in Tumor Mass between groups (mg)",
           xlab = "Tumor Mass (mg)",
           fill=I("#1C2C5B"),
