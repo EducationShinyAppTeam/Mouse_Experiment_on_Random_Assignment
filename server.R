@@ -10,7 +10,7 @@ library(shinyWidgets)
 # Mouse app
 
 #Use jscode to for reset button to reload the app
-jsResetCode <- "shinyjs.reset = function() {history.go(0)}"
+# jsResetCode <- "shinyjs.reset = function() {history.go(0)}"
 
 #Define the function to disable all the button
 disableActionButton <- function(id,session) {
@@ -71,7 +71,9 @@ shinyServer(function(input, output,session) {
     sendSweetAlert(
       session = session,
       title = "Instructions:",
-      text = "Quickly click on 10 mice to select the treatment group.",
+      text = "Quickly click on 10 mice to select the treatment group 
+      and then compare the results with what happens when the mice are 
+      assigned to groups randomly by the computer",
       type = "info"
     )
   })
@@ -80,6 +82,10 @@ shinyServer(function(input, output,session) {
   observeEvent(input$go,{
     updateTabItems(session,"tabs","hand")
   })
+  
+ #  observeEvent(input$stop, {
+ #      reset("times")
+ # })
 
 
 
@@ -124,7 +130,7 @@ shinyServer(function(input, output,session) {
   ###UPDATE: unable for clicking more mice
   observe({
     if (sum(val$btn) == 10){
-      updateButton(session, "submit","Submit Selection", style = "danger",icon = icon("hand-o-up"), size = "large", disabled = FALSE)
+      updateButton(session, "submit","Submit Selection", icon = icon("hand-o-up"), size = "large", disabled = FALSE)
       updateButton(session,'btn1',disabled=TRUE)
       updateButton(session,'btn2',disabled=TRUE)
       updateButton(session,'btn3',disabled=TRUE)
@@ -169,30 +175,26 @@ shinyServer(function(input, output,session) {
   })
 
   #Print the average weight for experimental group
-  output$aveWeight = renderText({
-    print(sum(val$btn * data[,"Weight(g)"])/10)})
+  output$aveWeight = renderText(sum(val$btn * data[,"Weight(g)"])/10)
   #Print the average age for experimental group
-  output$aveAge = renderText({
-    print(sum(val$btn * data[,"Age(wks)"])/10)
-  })
+  output$aveAge = renderText(sum(val$btn * data[,"Age(wks)"])/10)
+  
   #Print the average tumor mass for experimental group
   output$aveTu = renderText({
     #use the "model" function and input theta
     TuM = model(data,val,input$theta)
-    print(sum(val$btn * TuM)/10)
+    paste(sum(val$btn * TuM)/10)
   })
   output$gend = renderText(sum(val$btn * data[,"Gender"])/10)
   output$col = renderText(sum(val$btn * data[,"Color"])/10)
 
   #Print everything for control group
-  output$aveWeightC = renderText({
-    print(sum((1-val$btn)*data[,"Weight(g)"])/10)})
-  output$aveAgeC = renderText({
-    print(sum((1-val$btn)*data[,"Age(wks)"])/10)
-  })
+  output$aveWeightC = renderText(sum((1-val$btn)*data[,"Weight(g)"])/10)
+  output$aveAgeC = renderText(sum((1-val$btn)*data[,"Age(wks)"])/10)
+  
   output$aveTuC = renderText({
     TuM = model(data,val,input$theta)
-    print(sum((1-val$btn) * TuM)/10)
+    paste(sum((1-val$btn) * TuM)/10)
   })
 
   output$gendC = renderText(sum((1-val$btn) * data[,"Gender"])/10)
@@ -204,7 +206,7 @@ shinyServer(function(input, output,session) {
     barplot(c(wei,weiC),
             names.arg = c("Raspberry","Control"),
             main = "Comparison of Average Weight",
-            ylab = "Weight(g)", col = c("#C7053D","beige"))
+            ylab = "Weight(g)", ylim = c(0,60), col = c("#C7053D","beige"))
   }, width = 250, height = 350)
 
   output$age = renderPlot({
@@ -212,7 +214,7 @@ shinyServer(function(input, output,session) {
     ageC = sum((1 - val$btn) * data[,"Age(wks)"])/10
     barplot(c(age,ageC),
             names.arg = c("Raspberry","Control"), main = "Comparison of Average Age",
-            ylab = "Age(wks)", col = c("#C7053D","beige"))
+            ylab = "Age(wks)", ylim = c(0,12), col = c("#C7053D","beige"))
   }, width = 250, height = 350)
 
   output$tumor = renderPlot({
@@ -221,7 +223,7 @@ shinyServer(function(input, output,session) {
     TumC = sum((1-val$btn) * TuM)/10
     barplot(c(Tum,TumC,(TumC-Tum)),
             names.arg = c("Raspberry Group","Control Group","Difference"), main = "Comparison of Tumor Mass",
-            ylab = "Tumor Mass(mg)", col = c("#C7053D","beige","#1C2C5B"),width = 5, xlim = c(1,30))
+            ylab = "Tumor Mass(mg)", ylim = c(0,600), col = c("#C7053D","beige","#1C2C5B"),width = 5, xlim = c(1,30))
     legend("right",c("Raspberry Group","Control Group","Difference"),col = c("#C7053D","beige","#1C2C5B"),fill=c("#C7053D","beige","#1C2C5B")
            )
   },width = 500, height = 350)
@@ -266,7 +268,7 @@ shinyServer(function(input, output,session) {
       else {data$Gender[i] = "Male"}
     }
 
-    print(data)
+    # print(data)
   })
 
 ###########################################################
@@ -283,6 +285,8 @@ shinyServer(function(input, output,session) {
     diffTum = c()
 
 #Use for loop to simulate many times
+  # withProgress(message = "Simulating Experiments", value = 0, {
+  #   n <- input$times
     for (i in 1:input$times){
       #Use random sampling to get 10 mice for experimental group each time
       exp = sample(1:20,10)
@@ -298,7 +302,10 @@ shinyServer(function(input, output,session) {
       diffWeight[i] = compWeight[i] - compWeightC[i]
       diffAge[i] = compAge[i] - compAgeC[i]
       diffTum[i] = compTum[i] - compTumC[i]
+      # incProgress(1/n, detail = paste("Simulating Experiment", i))
     }
+  # })
+    
       #Create a dataframe
       meanWeight = c(mean(compWeightC), mean(compWeight))
       meanAge = c(mean(compAgeC),mean(compAge))
@@ -400,7 +407,7 @@ shinyServer(function(input, output,session) {
       else {data$Gender[i] = "Male"}
     }
 
-    print(data)
+    # print(data)
 
   })
 
