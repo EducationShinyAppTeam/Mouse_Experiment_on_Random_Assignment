@@ -1,8 +1,6 @@
 library(shiny)
 library(shinyBS)
-library(shinyjs)
 library(ggplot2)
-library(V8)
 library(shinydashboard)
 library(shinyWidgets)
 
@@ -25,10 +23,10 @@ model <- function(data,val,theta){
   for (i in 1:20){
     if (val$btn[i] == 0){
       TuMass[i] = TuMass[i] + rnorm(1, mean = 0, sd = 0.05 * TuMass[i])
-      }
+    }
     else{
       TuMass[i] = TuMass[i] * (1 - theta) + rnorm(1, mean = 0, sd = 0.05 * (TuMass[i] * (1 - theta)))
-      }
+    }
   }
   return(TuMass)
 }
@@ -64,7 +62,6 @@ for (i in 1:20){
 }
 data$Gender = as.numeric(data$Gender)
 
-
 ####################################################
 shinyServer(function(input, output,session) {
   observeEvent(input$info,{
@@ -82,12 +79,6 @@ shinyServer(function(input, output,session) {
   observeEvent(input$go,{
     updateTabItems(session,"tabs","hand")
   })
-  
- #  observeEvent(input$stop, {
- #      reset("times")
- # })
-
-
 
   #Save all the actionButton input into a vector for later convenience
   val <- reactiveValues(btn = c())
@@ -121,7 +112,7 @@ shinyServer(function(input, output,session) {
   observeEvent(val$btn,({
     for (i in 1:20){
       if (val$btn[i] == 1){
-        updateButton(session,paste("btn",i,sep = ""), style = "danger", disabled = TRUE)
+        updateButton(session,paste("btn",i,sep = ""), style = "default", disabled = TRUE)
       }
     }
   }))
@@ -130,7 +121,13 @@ shinyServer(function(input, output,session) {
   ###UPDATE: unable for clicking more mice
   observe({
     if (sum(val$btn) == 10){
-      updateButton(session, "submit","Submit Selection", icon = icon("hand-o-up"), size = "large", disabled = FALSE)
+      updateButton(
+        session, 
+        inputId = "submit",
+        label = "Submit Selection", 
+        size = "large", 
+        disabled = FALSE
+      )
       updateButton(session,'btn1',disabled=TRUE)
       updateButton(session,'btn2',disabled=TRUE)
       updateButton(session,'btn3',disabled=TRUE)
@@ -150,13 +147,13 @@ shinyServer(function(input, output,session) {
       updateButton(session,'btn17',disabled=TRUE)
       updateButton(session,'btn18',disabled=TRUE)
       updateButton(session,'btn19',disabled=TRUE)
-      updateButton(session,'btn20',disabled=TRUE)}
+      updateButton(session,'btn20',disabled=TRUE)
+    }
   })
   #When more than 10 buttons have been clicked, disable the submit button.
   observe({
     if (sum(val$btn) > 10){
       updateButton(session, "submit", disabled = TRUE)
-
     }
   })
   #When the submit button is clicked, redirect to the next page.
@@ -174,31 +171,47 @@ shinyServer(function(input, output,session) {
     paste("You have selected", sum(val$btn), "mice.")
   })
 
-  #Print the average weight for experimental group
-  output$aveWeight = renderText(sum(val$btn * data[,"Weight(g)"])/10)
-  #Print the average age for experimental group
-  output$aveAge = renderText(sum(val$btn * data[,"Age(wks)"])/10)
+  #use the "model" function and input theta
+  TuM = model(data,val,input$theta)
   
-  #Print the average tumor mass for experimental group
-  output$aveTu = renderText({
-    #use the "model" function and input theta
-    TuM = model(data,val,input$theta)
-    paste(sum(val$btn * TuM)/10)
-  })
-  output$gend = renderText(sum(val$btn * data[,"Gender"])/10)
-  output$col = renderText(sum(val$btn * data[,"Color"])/10)
-
-  #Print everything for control group
-  output$aveWeightC = renderText(sum((1-val$btn)*data[,"Weight(g)"])/10)
-  output$aveAgeC = renderText(sum((1-val$btn)*data[,"Age(wks)"])/10)
+  #Define vectors for the summary data frame
+  totalSelected <- c(10, 10)
+  aveWeight <- c(sum(val$btn * data[,"Weight(g)"])/10, sum((1-val$btn)*data[,"Weight(g)"])/10)
+  aveAge <- c(sum(val$btn * data[,"Age(wks)"])/10, sum((1-val$btn)*data[,"Age(wks)"])/10)
+  aveTu <- c(sum(val$btn * TuM)/10, sum((1-val$btn) * TuM)/10)
+  gend <- c(sum(val$btn * data[,"Gender"])/10, sum((1-val$btn) * data[,"Gender"])/10)
+  col <- c(sum(val$btn * data[,"Color"])/10, sum((1-val$btn) * data[,"Color"])/10)
   
-  output$aveTuC = renderText({
-    TuM = model(data,val,input$theta)
-    paste(sum((1-val$btn) * TuM)/10)
-  })
-
-  output$gendC = renderText(sum((1-val$btn) * data[,"Gender"])/10)
-  output$colC = renderText(sum((1-val$btn) * data[,"Color"])/10)
+  #Create dataframe for summary table 
+  miceSumData <- data.frame(
+                  Group = c("Raspberry Group","Control Group"), 
+                  totalSelected, 
+                  aveWeight, 
+                  aveAge, 
+                  aveTu, 
+                  gend, 
+                  col)
+  names(miceSumData) <- c("Total Selected", 
+                          "Mean Weight (g)", 
+                          "Mean Age (wks)", 
+                          "Mean Tumor Mass (g)", 
+                          "Proportion Female", 
+                          "Proportion Brown")
+    #Prepare summary table for summary tab
+  output$miceSum <- DT::renderDT(
+    expr = miceSumData,
+    caption = "Hand Selection Data", 
+    style = "bootstrap4", 
+    rownames = FALSE,
+    options = list( 
+      responsive = TRUE,
+      scrollX = TRUE, 
+      columnDefs = list(  
+        # Notice the use of ncol on your data frame; leave the 1 as is.
+        list(className = 'dt-center', targets = 1:ncol(miceSumData))
+      )
+    )
+  )
 
   output$weight = renderPlot({
     wei = sum(val$btn * data[,"Weight(g)"])/10
@@ -206,15 +219,25 @@ shinyServer(function(input, output,session) {
     barplot(c(wei,weiC),
             names.arg = c("Raspberry","Control"),
             main = "Comparison of Average Weight",
-            ylab = "Weight(g)", ylim = c(0,60), col = c("#C7053D","beige"))
-  }, width = 250, height = 350)
+            ylab = "Weight(g)", 
+            ylim = c(0,60), 
+            col = c("#C7053D","beige"), 
+            cex.axis = 1.25, 
+            cex.names = 1.25)
+    }, width = 250, height = 350)
 
   output$age = renderPlot({
     age = sum(val$btn * data[,"Age(wks)"])/10
     ageC = sum((1 - val$btn) * data[,"Age(wks)"])/10
     barplot(c(age,ageC),
-            names.arg = c("Raspberry","Control"), main = "Comparison of Average Age",
-            ylab = "Age(wks)", ylim = c(0,12), col = c("#C7053D","beige"))
+            names.arg = c("Raspberry","Control"), 
+            main = "Comparison of Average Age",
+            ylab = "Age(wks)", 
+            ylim = c(0,12), 
+            col = c("#C7053D","beige"), 
+            cex.axis = 1.25, 
+            cex.names = 1.25
+    )
   }, width = 250, height = 350)
 
   output$tumor = renderPlot({
@@ -222,10 +245,22 @@ shinyServer(function(input, output,session) {
     Tum = sum(val$btn * TuM)/10
     TumC = sum((1-val$btn) * TuM)/10
     barplot(c(Tum,TumC,(TumC-Tum)),
-            names.arg = c("Raspberry Group","Control Group","Difference"), main = "Comparison of Tumor Mass",
-            ylab = "Tumor Mass(mg)", ylim = c(0,600), col = c("#C7053D","beige","#1C2C5B"),width = 5, xlim = c(1,30))
-    legend("right",c("Raspberry Group","Control Group","Difference"),col = c("#C7053D","beige","#1C2C5B"),fill=c("#C7053D","beige","#1C2C5B")
-           )
+            names.arg = c("Raspberry Group","Control Group","Difference"), 
+            main = "Comparison of Tumor Mass",
+            ylab = "Tumor Mass(mg)", 
+            ylim = c(0,600), 
+            col = c("#C7053D","beige","#1C2C5B"),
+            width = 5, 
+            xlim = c(1,30), 
+            cex.axis = 1.25, 
+            cex.names = 1.25
+    )
+    legend(
+      x = "right",
+      c("Raspberry Group","Control Group","Difference"),
+      col = c("#C7053D","beige","#1C2C5B"),
+      fill=c("#C7053D","beige","#1C2C5B")
+      )
   },width = 500, height = 350)
 
   output$gender = renderPlot({
@@ -233,8 +268,19 @@ shinyServer(function(input, output,session) {
                                (sum((1 - val$btn) * data[,"Gender"]))),
                              c((sum(val$btn * (1 - data[,"Gender"]))),
                                (sum((1 - val$btn) * (1 - data[,"Gender"]))))),2),
-            col = c("#FBB4AE","#B3CDE3"),names.arg = c("Raspberry","Control"),main = "Comparison of gender",width = 6,xlim = c(1,16))
-    legend("right",c("Female","Male"), col = c("#FBB4AE","#B3CDE3"),fill = c("#FBB4AE","#B3CDE3"))
+            col = c("#FBB4AE","#B3CDE3"),
+            names.arg = c("Raspberry","Control"),
+            main = "Comparison of gender",
+            width = 6,xlim = c(1,16), 
+            cex.axis = 1.25, 
+            cex.names = 1.25
+    )
+    legend(
+      x = "right",
+      c("Female","Male"), 
+      col = c("#FBB4AE","#B3CDE3"),
+      fill = c("#FBB4AE","#B3CDE3")
+    )
   },width = 270, height = 350)
 
   output$color = renderPlot({
@@ -242,8 +288,19 @@ shinyServer(function(input, output,session) {
                                (sum((1 - val$btn) * data[,"Color"]))),
                              c((sum(val$btn * (1 - data[,"Color"]))),
                                (sum((1 - val$btn) * (1 - data[,"Color"]))))),2),
-            col = c("#BE996E","black"),names.arg = c("Raspberry","Control"),main = "Comparison of colors",width = 6,xlim = c(1,16))
-    legend("right",c("Brown","Black"), col = c("#BE996E","black"),fill = c("#BE996E","black"))
+            col = c("#BE996E","black"),
+            names.arg = c("Raspberry","Control"),
+            main = "Comparison of colors",
+            width = 6,xlim = c(1,16), 
+            cex.axis = 1.25, 
+            cex.names = 1.25
+    )
+    legend(
+      x = "right",
+      c("Brown","Black"), 
+      col = c("#BE996E","black"),
+      fill = c("#BE996E","black")
+    )
   },width = 270, height = 350)
 
   ##Print raw data with assigned group
@@ -253,7 +310,6 @@ shinyServer(function(input, output,session) {
       if (data$Group[i] == 1){data$Group[i] = "Raspberry"}
       else {data$Group[i] = "Control"}
     }
-
     TuM = model(data,val,input$theta)
     data[,4] = TuM
 
@@ -262,13 +318,10 @@ shinyServer(function(input, output,session) {
       if (data$Color[i] == 1){data$Color[i] = "Brown"}
       else {data$Color[i] = "Black"}
     }
-
     for (i in 1:20){
       if (data$Gender[i] == 1){data$Gender[i] = "Female"}
       else {data$Gender[i] = "Male"}
     }
-
-    # print(data)
   })
 
 ###########################################################
@@ -290,7 +343,8 @@ shinyServer(function(input, output,session) {
     for (i in 1:input$times){
       #Use random sampling to get 10 mice for experimental group each time
       exp = sample(1:20,10)
-      #Get the average weight, age, tumor mass for both groups in each simulation and save as vectors
+      #Get the average weight, age, tumor mass for both groups in each simulation 
+      # and save as vectors
       compWeight[i] = mean(data[exp,"Weight(g)"])
       compWeightC[i] = mean(data[-exp,"Weight(g)"])
       compAge[i] = mean(data[exp,"Age(wks)"])
@@ -323,10 +377,12 @@ shinyServer(function(input, output,session) {
            diffWeight = diffWeight, diffAge = diffAge, diffTum = diffTum, aveDiff = meanDiff, exp = exp)
 
   })
-#Using the Freedman-Diaconis Rule for bin widths
+  #Using the Freedman-Diaconis Rule for bin widths
 binwidth <- function(x) {
     2 * IQR(x) / (length(x)^(1/3))
+
 }
+
 
   output$computerTable <- renderTable({
     table()$aveTable
@@ -334,21 +390,40 @@ binwidth <- function(x) {
 
   output$compWeightBar <- renderPlot({
     barplot(table()$aveWeight,
-            names.arg = c("Raspberry Group","Control Group"), main = "Comparison of Average Weight",
-            ylab = "Weight(g)", col = c("#C7053D","beige"))
+            names.arg = c("Raspberry Group","Control Group"), 
+            main = "Comparison of Average Weight",
+            ylab = "Weight(g)", 
+            col = c("#C7053D","beige"), 
+            cex.axis = 1.25, 
+            cex.names = 1.25)
   }, width = 250, height = 350)
 
   output$compAgeBar = renderPlot({
     barplot(table()$aveAge,
-            names.arg = c("Raspberry Group","Control Group"), main = "Comparison of Average Age",
-            ylab = "Age(wks)", col = c("#C7053D","beige"))
+            names.arg = c("Raspberry Group","Control Group"), 
+            main = "Comparison of Average Age",
+            ylab = "Age(wks)", 
+            col = c("#C7053D","beige"), 
+            cex.axis = 1.25, 
+            cex.names = 1.25
+    )
   }, width = 250, height = 350)
 
   output$compTumorBar = renderPlot({
     barplot(c(table()$aveTum,table()$aveDiff),
-            names.arg = c("Raspberry Group","Control Group","Difference"), main = "Comparison of Tumor Mass",
-            ylab = "Tumor Mass(mg)", col = c("#C7053D","beige","#1C2C5B"),width = 5, xlim = c(1,30))
-    legend("right",c("Raspberry Group","Control Group","Difference"),col = c("#C7053D","beige","#1C2C5B"),fill=c("#C7053D","beige","#1C2C5B")
+            names.arg = c("Raspberry Group","Control Group","Difference"), 
+            main = "Comparison of Tumor Mass",
+            ylab = "Tumor Mass(mg)", 
+            col = c("#C7053D","beige","#1C2C5B"),
+            width = 5, xlim = c(1,30), 
+            cex.axis = 1.25, 
+            cex.names = 1.25
+    )
+    legend(
+      x = "right",
+      c("Raspberry Group","Control Group","Difference"),
+      col = c("#C7053D","beige","#1C2C5B"),
+      fill=c("#C7053D","beige","#1C2C5B")
     )
   },width = 500, height = 350)
 
@@ -360,9 +435,12 @@ binwidth <- function(x) {
           xlab = "Weight (g)",
           fill=I("#1C2C5B"),
           col=I("#1C2C5B"),
-          alpha=I(.8)
+          alpha=I(.8), 
+          cex.axis = 1.25, 
+          cex.names = 1.25
           )
   }, height = 350)
+  
 
   output$compAgeHist = renderPlot({
     qplot(table()$diffAge,
@@ -372,7 +450,9 @@ binwidth <- function(x) {
           xlab = "Age (wks)",
           fill=I("#1C2C5B"),
           col=I("#1C2C5B"),
-          alpha=I(.8)
+          alpha=I(.8), 
+          cex.axis = 1.25, 
+          cex.names = 1.25
     )
   }, height = 350)
 
@@ -384,7 +464,9 @@ binwidth <- function(x) {
           xlab = "Tumor Mass (mg)",
           fill=I("#1C2C5B"),
           col=I("#1C2C5B"),
-          alpha=I(.8)
+          alpha=I(.8), 
+          cex.axis = 1.25, 
+          cex.names = 1.25
     )
   }, height = 350)
 
@@ -395,22 +477,15 @@ binwidth <- function(x) {
       if (any(data$Group[i] == table()$exp)){data$Group[i] = "Raspberry"}
       else {data$Group[i] = "Control"}
     }
-
     data[,4] = table()$Tumor
-
 
     for (i in 1:20){
       if (data$Color[i] == 1){data$Color[i] = "Brown"}
       else {data$Color[i] = "Black"}
     }
-
     for (i in 1:20){
       if (data$Gender[i] == 1){data$Gender[i] = "Female"}
       else {data$Gender[i] = "Male"}
     }
-
-    # print(data)
-
   })
-
 })
