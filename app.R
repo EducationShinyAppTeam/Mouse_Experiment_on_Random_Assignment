@@ -827,11 +827,11 @@ server <- function(input, output,session) {
 
   #Define vectors for the summary data frame
   totalSelected <- c(10, 10)
-  aveWeight <- c(sum(val$btn * data[,"Weight(g)"])/10, sum((1-val$btn)*data[,"Weight(g)"])/10)
-  aveAge <- c(sum(val$btn * data[,"Age(wks)"])/10, sum((1-val$btn)*data[,"Age(wks)"])/10)
-  aveTu <- c(sum(val$btn * TuM)/10, sum((1-val$btn) * TuM)/10)
-  gend <- c(sum(val$btn * data[,"Gender"])/10, sum((1-val$btn) * data[,"Gender"])/10)
-  col <- c(sum(val$btn * data[,"Color"])/10, sum((1-val$btn) * data[,"Color"])/10)
+  # aveWeight <- c(sum(val$btn * data[,"Weight(g)"])/10, sum((1-val$btn)*data[,"Weight(g)"])/10)
+  # aveAge <- c(sum(val$btn * data[,"Age(wks)"])/10, sum((1-val$btn)*data[,"Age(wks)"])/10)
+  # aveTu <- c(sum(val$btn * TuM)/10, sum((1-val$btn) * TuM)/10)
+  # gend <- c(sum(val$btn * data[,"Gender"])/10, sum((1-val$btn) * data[,"Gender"])/10)
+  # col <- c(sum(val$btn * data[,"Color"])/10, sum((1-val$btn) * data[,"Color"])/10)
 
   #Create dataframe for summary table
   # miceSumData <- data.frame(
