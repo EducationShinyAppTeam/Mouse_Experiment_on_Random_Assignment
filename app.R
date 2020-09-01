@@ -25,6 +25,9 @@ disableActionButton <- function(id,session) {
 }
 
 raspPalette <- c("#BC204B", "#F5F5DC", "#1E407C" )
+small <- 100
+medium <- 130
+large <-160
 
 ## Extract tumor mass from the raspberry experiment model ----
 model <- function(data, val, theta){
@@ -155,40 +158,40 @@ ui <- list(
               bsButton(
                 inputId = "btn1",
                 label = tags$img(src = "blackMouse.png",
-                                 width = 110,
+                                 width = medium,
                                  alt = "medium black mouse"
                 ),
                 style = "info"
               )
             ),
             column(
-              width = 3,
+              width = 1,
               bsButton(
                 inputId = "btn2",
                 label = tags$img(src = "brownMouse.png",
-                                 width = 86,
+                                 width = small,
                                  alt = "small brown mouse"
                 ),
                 style = "info"
               )
             ),
             column(
-              width = 3,
+              width = 2,
               bsButton(
                 inputId = "btn3",
                 label = tags$img(src = "brownMouse.png",
-                                 width = 150,
+                                 width = large,
                                  alt = "large brown mouse"
                 ),
                 style = "info"
               )
             ),
             column(
-              width = 3,
+              width = 2,
               bsButton(
                 inputId = "btn4",
                 label = tags$img(src = "blackMouse.png",
-                                 width = 105,
+                                 width = medium,
                                  alt = "medium black mouse"
                 ),
                 style = "info"
@@ -201,31 +204,31 @@ ui <- list(
               bsButton(
                 inputId = "btn5",
                 label = tags$img(src = "brownMouse.png",
-                                 width = 87,
+                                 width = small,
                                  alt = "small brown mouse"
                 ),
                 style = "info"
               )
             ),
             column(
-              width = 3,
-              offset = 1,
+              width = 1,
+              offset = 0,
               bsButton(
                 inputId = "btn6",
                 label = tags$img(src = "brownMouse.png",
-                                 width = 90,
+                                 width = small,
                                  alt = "small brown mouse"
                 ),
                 style = "info"
               )
             ),
             column(
-              width = 3,
-              offset = 1,
+              width = 2,
+              offset = 0,
               bsButton(
                 inputId = "btn7",
                 label = tags$img(src = "blackMouse.png",
-                                 width = 160,
+                                 width = large,
                                  alt = "large black mouse"
                 ),
                 style = "info"
@@ -236,7 +239,7 @@ ui <- list(
               bsButton(
                 inputId = "btn8",
                 label = tags$img(src = "brownMouse.png",
-                                 width = 85,
+                                 width = small,
                                  alt = "small brown mouse"
                 ),
                 style = "info"
@@ -245,24 +248,24 @@ ui <- list(
           ), br(),br(),
           fluidRow(
             column(
-              width = 2,
+              width = 1,
               offset = 1,
               bsButton(
                 inputId = "btn9",
                 label = tags$img(src = "brownMouse.png",
-                                 width = 88,
+                                 width = small,
                                  alt = "small brown mouse"
                 ),
                 style = "info"
               )
             ),
             column(
-              width = 3,
-              offset = 1,
+              width = 2,
+              offset = 0,
               bsButton(
                 inputId = "btn10",
                 label = tags$img(src = "blackMouse.png",
-                                 width = 75,
+                                 width = small,
                                  alt = "small black mouse"
                 ),
                 style = "info"
@@ -273,7 +276,7 @@ ui <- list(
               bsButton(
                 inputId = "btn11",
                 label = tags$img(src = "brownMouse.png",
-                                 width = 110,
+                                 width = medium,
                                  alt = "medium brown mouse"
                 ),
                 style = "info"
@@ -284,7 +287,7 @@ ui <- list(
               bsButton(
                 inputId = "btn12",
                 label = tags$img(src = "blackMouse.png",
-                                 width = 87,
+                                 width = small,
                                  alt = "small black mouse"
                 ),
                 style = "info"
@@ -293,33 +296,33 @@ ui <- list(
           ), br(),br(),
           fluidRow(
             column(
-              width = 3,
+              width = 1,
               bsButton(
                 inputId = "btn13",
                 label = tags$img(src = "blackMouse.png",
-                                 width = 90,
+                                 width = small,
                                  alt = "small black mouse"
                 ),
                 style = "info"
               )
             ),
             column(
-              width = 2,
+              width = 1,
               bsButton(
                 inputId = "btn14",
                 label = tags$img(src = "blackMouse.png",
-                                 width = 85,
+                                 width = small,
                                  alt = "small brown mouse"
                 ),
                 style = "info"
               )
             ),
             column(
-              width = 3,
+              width = 1,
               bsButton(
                 inputId = "btn15",
                 label = tags$img(src = "brownMouse.png",
-                                 width = 83,
+                                 width = small,
                                  alt = "small brown mouse"
                 ),
                 style = "info"
@@ -330,7 +333,7 @@ ui <- list(
               bsButton(
                 inputId = "btn16",
                 label = tags$img(src = "blackMouse.png",
-                                 width = 155,
+                                 width = large,
                                  alt = "large black mouse"
                 ),
                 style = "info"
@@ -339,12 +342,12 @@ ui <- list(
           ), br(),br(),
           fluidRow(
             column(
-              width = 2,
+              width = 1,
               offset = 1,
               bsButton(
                 inputId = "btn17",
                 label = tags$img(src = "blackMouse.png",
-                                 width = 87,
+                                 width = small,
                                  alt = "small black mouse"
                 ),
                 style = "info"
@@ -352,23 +355,23 @@ ui <- list(
             ),
             column(
               width = 2,
-              offset = 1,
+              offset = 0,
               bsButton(
                 inputId = "btn18",
                 label = tags$img(src = "brownMouse.png",
-                                 width = 105,
+                                 width = medium,
                                  alt = "medium brown mouse"
                 ),
                 style = "info"
               )
             ),
             column(
-              width = 3,
-              offset = 1,
+              width = 1,
+              offset = 0,
               bsButton(
                 inputId = "btn19",
                 label = tags$img(src = "brownMouse.png",
-                                 width = 115,
+                                 width = medium,
                                  alt = "medium brown mouse"
                 ),
                 style = "info"
@@ -379,7 +382,7 @@ ui <- list(
               bsButton(
                 inputId = "btn20",
                 label = tags$img(src = "brownMouse.png",
-                                 width = 120,
+                                 width = medium,
                                  alt = "medium brown mouse"
                 ),
                 style = "info"
