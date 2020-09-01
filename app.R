@@ -5,6 +5,7 @@ library(shinydashboard)
 library(shinyWidgets)
 library(DT)
 library(ggplot2)
+library(tidyverse)
 library(boastUtils)
 
 ## App Meta Data----------------------------------------------------------------
@@ -23,14 +24,17 @@ disableActionButton <- function(id,session) {
                                              ,sep="")))
 }
 
+raspPalette <- c("#BC204B", "#F5F5DC", "#1E407C" )
+
 ## Extract tumor mass from the raspberry experiment model ----
 model <- function(data, val, theta){
   TuMass = data[,4]
   for (i in 1:20){
-    if (val$btn[i] == 0){
+    if (is.null(isolate(val$btn[i]))) {
+      # skip
+    } else if (isolate(val$btn[i]) == 0) {
       TuMass[i] = TuMass[i] + rnorm(1, mean = 0, sd = 0.05 * TuMass[i])
-    }
-    else{
+    } else {
       TuMass[i] = TuMass[i] * (1 - theta) + rnorm(1, mean = 0, sd = 0.05 * (TuMass[i] * (1 - theta)))
     }
   }
@@ -52,13 +56,12 @@ compModel <- function(data, index, theta){
 
 # Read in the data ----
 data <- read.csv("database.csv", stringsAsFactors = FALSE)
-colnames(data) = c("Color", "Weight(g)", "Age(wks)", "TumorMass(mg)",
-                   "Gender")
-# Change the column color and gender from factor to numeric
-for (i in 1:20){
-  data$Color[i] <- ifelse(data$Color[i] == "brown", 1, 0)
-  data$Gender[i] <- ifelse(data$Gender[i] == "Female", 1, 0)
-}
+colnames(data) = c("Color", "Weight", "Age", "Tumor", "Gender")
+data$Color <- dplyr::recode(data$Color, "brown" = 1, "black" = 0)
+data$Gender <- dplyr::recode(data$Gender, "Female" = 1, "Male" = 0)
+data$handPicked <- "Control"
+data$compPicked <- "Control"
+origTumor <- data$Tumor
 
 # Define the UI ----
 ui <- list(
@@ -116,7 +119,6 @@ ui <- list(
                     until you have selected ten, then click the submit button)."),
             tags$li("If you select more than 10 mice, please click RESET to select again."),
             tags$li("Explore the data from the ten mice that you selected."),
-            tags$li("Click RAW DATA to copy the data if you need to do further analysis."),
             tags$li("Click 'Compare with Random Selection' to explore computer generated data using random selection."),
             tags$li(strong("Note:"), "This app is intended to be used in full screen mode.")
           ),
@@ -152,9 +154,9 @@ ui <- list(
               offset = 1,
               bsButton(
                 inputId = "btn1",
-                label = tags$img(src = "brown3.png",
-                                 width = 82,
-                                 alt = "small brown mouse"
+                label = tags$img(src = "blackMouse.png",
+                                 width = 110,
+                                 alt = "medium black mouse"
                 ),
                 style = "info"
               )
@@ -163,9 +165,9 @@ ui <- list(
               width = 3,
               bsButton(
                 inputId = "btn2",
-                label = tags$img(src = "brown3.png",
-                                 width = 142,
-                                 alt = "large brown mouse"
+                label = tags$img(src = "brownMouse.png",
+                                 width = 86,
+                                 alt = "small brown mouse"
                 ),
                 style = "info"
               )
@@ -174,9 +176,9 @@ ui <- list(
               width = 3,
               bsButton(
                 inputId = "btn3",
-                label = tags$img(src = "black3.png",
-                                 width = 90,
-                                 alt = "small black mouse"
+                label = tags$img(src = "brownMouse.png",
+                                 width = 150,
+                                 alt = "large brown mouse"
                 ),
                 style = "info"
               )
@@ -185,9 +187,9 @@ ui <- list(
               width = 3,
               bsButton(
                 inputId = "btn4",
-                label = tags$img(src = "black3.png",
-                                 width = 90,
-                                 alt = "small black mouse"
+                label = tags$img(src = "blackMouse.png",
+                                 width = 105,
+                                 alt = "medium black mouse"
                 ),
                 style = "info"
               )
@@ -198,8 +200,8 @@ ui <- list(
               width = 2,
               bsButton(
                 inputId = "btn5",
-                label = tags$img(src = "brown3.png",
-                                 width = 97,
+                label = tags$img(src = "brownMouse.png",
+                                 width = 87,
                                  alt = "small brown mouse"
                 ),
                 style = "info"
@@ -210,9 +212,9 @@ ui <- list(
               offset = 1,
               bsButton(
                 inputId = "btn6",
-                label = tags$img(src = "black3.png",
-                                 width = 162,
-                                 alt = "large black mouse"
+                label = tags$img(src = "brownMouse.png",
+                                 width = 90,
+                                 alt = "small brown mouse"
                 ),
                 style = "info"
               )
@@ -222,9 +224,9 @@ ui <- list(
               offset = 1,
               bsButton(
                 inputId = "btn7",
-                label = tags$img(src = "brown3.png",
-                                 width = 95,
-                                 alt = "small brown mouse"
+                label = tags$img(src = "blackMouse.png",
+                                 width = 160,
+                                 alt = "large black mouse"
                 ),
                 style = "info"
               )
@@ -233,9 +235,9 @@ ui <- list(
               width = 2,
               bsButton(
                 inputId = "btn8",
-                label = tags$img(src = "black3.png",
-                                 width = 92,
-                                 alt = "small black mouse"
+                label = tags$img(src = "brownMouse.png",
+                                 width = 85,
+                                 alt = "small brown mouse"
                 ),
                 style = "info"
               )
@@ -247,9 +249,9 @@ ui <- list(
               offset = 1,
               bsButton(
                 inputId = "btn9",
-                label = tags$img(src = "black3.png",
-                                 width = 101,
-                                 alt = "large black mouse"
+                label = tags$img(src = "brownMouse.png",
+                                 width = 88,
+                                 alt = "small brown mouse"
                 ),
                 style = "info"
               )
@@ -259,9 +261,9 @@ ui <- list(
               offset = 1,
               bsButton(
                 inputId = "btn10",
-                label = tags$img(src = "brown3.png",
-                                 width = 101,
-                                 alt = "large brown mouse"
+                label = tags$img(src = "blackMouse.png",
+                                 width = 75,
+                                 alt = "small black mouse"
                 ),
                 style = "info"
               )
@@ -270,9 +272,9 @@ ui <- list(
               width = 2,
               bsButton(
                 inputId = "btn11",
-                label = tags$img(src = "brown3.png",
-                                 width = 82,
-                                 alt = "small brown mouse"
+                label = tags$img(src = "brownMouse.png",
+                                 width = 110,
+                                 alt = "medium brown mouse"
                 ),
                 style = "info"
               )
@@ -281,9 +283,9 @@ ui <- list(
               width = 2,
               bsButton(
                 inputId = "btn12",
-                label = tags$img(src = "brown3.png",
-                                 width = 113,
-                                 alt = "large brown mouse"
+                label = tags$img(src = "blackMouse.png",
+                                 width = 87,
+                                 alt = "small black mouse"
                 ),
                 style = "info"
               )
@@ -294,9 +296,9 @@ ui <- list(
               width = 3,
               bsButton(
                 inputId = "btn13",
-                label = tags$img(src = "black3.png",
-                                 width = 122,
-                                 alt = "large black mouse"
+                label = tags$img(src = "blackMouse.png",
+                                 width = 90,
+                                 alt = "small black mouse"
                 ),
                 style = "info"
               )
@@ -305,9 +307,9 @@ ui <- list(
               width = 2,
               bsButton(
                 inputId = "btn14",
-                label = tags$img(src = "brown3.png",
-                                 width = 124,
-                                 alt = "large brown mouse"
+                label = tags$img(src = "blackMouse.png",
+                                 width = 85,
+                                 alt = "small brown mouse"
                 ),
                 style = "info"
               )
@@ -316,9 +318,9 @@ ui <- list(
               width = 3,
               bsButton(
                 inputId = "btn15",
-                label = tags$img(src = "brown3.png",
-                                 width = 126,
-                                 alt = "large brown mouse"
+                label = tags$img(src = "brownMouse.png",
+                                 width = 83,
+                                 alt = "small brown mouse"
                 ),
                 style = "info"
               )
@@ -327,8 +329,8 @@ ui <- list(
               width = 3,
               bsButton(
                 inputId = "btn16",
-                label = tags$img(src = "black3.png",
-                                 width = 126,
+                label = tags$img(src = "blackMouse.png",
+                                 width = 155,
                                  alt = "large black mouse"
                 ),
                 style = "info"
@@ -341,9 +343,9 @@ ui <- list(
               offset = 1,
               bsButton(
                 inputId = "btn17",
-                label = tags$img(src = "brown3.png",
-                                 width = 127,
-                                 alt = "large brown mouse"
+                label = tags$img(src = "blackMouse.png",
+                                 width = 87,
+                                 alt = "small black mouse"
                 ),
                 style = "info"
               )
@@ -353,9 +355,9 @@ ui <- list(
               offset = 1,
               bsButton(
                 inputId = "btn18",
-                label = tags$img(src = "black3.png",
-                                 width = 154,
-                                 alt = "large black mouse"
+                label = tags$img(src = "brownMouse.png",
+                                 width = 105,
+                                 alt = "medium brown mouse"
                 ),
                 style = "info"
               )
@@ -365,9 +367,9 @@ ui <- list(
               offset = 1,
               bsButton(
                 inputId = "btn19",
-                label = tags$img(src = "black3.png",
-                                 width = 101,
-                                 alt = "large black mouse"
+                label = tags$img(src = "brownMouse.png",
+                                 width = 115,
+                                 alt = "medium brown mouse"
                 ),
                 style = "info"
               )
@@ -376,9 +378,9 @@ ui <- list(
               width = 2,
               bsButton(
                 inputId = "btn20",
-                label = tags$img(src = "brown3.png",
-                                 width = 84,
-                                 alt = "small brown mouse"
+                label = tags$img(src = "brownMouse.png",
+                                 width = 120,
+                                 alt = "medium brown mouse"
                 ),
                 style = "info"
               )
@@ -411,9 +413,9 @@ ui <- list(
         tabItem(
           tabName = "summary",
           h2("Summary of Hand-Selected  for Comparison"),
-          br(),br(),br(),
           conditionalPanel(
             condition = "input.submit == 0",
+            br(),br(),br(),
             wellPanel(
               div(
                 style = "position: relative; text-align: center;",
@@ -423,45 +425,11 @@ ui <- list(
             )
           ),
           conditionalPanel(
-            condition = "(output.number >= 10) & (input.submit != 0)",
+            condition = "input.submit != 0",
             DT::DTOutput(outputId = "miceSum"),
-            # fluidRow(
-            #   column(
-            #     width = 12,
-            #     wellPanel(
-            #       fluidRow(
-            #          column(2,""),
-            #          column(2,strong("Total selected")),
-            #          column(2,strong("Mean Weight (g)")),
-            #          column(2,strong("Mean Age (wks)")),
-            #          column(2,strong("Mean Tumor Mass (mg)")),
-            #          column(1,strong("Proportion Female")),
-            #          column(1,strong("Proportion Brown"))
-            #         ),
-            #         fluidRow(
-            #           column(2,strong("Rspb.Group")),
-            #           column(2,"10"),
-            #           column(2,textOutput("aveWeight")),
-            #           column(2,textOutput("aveAge")),
-            #           column(2,textOutput("aveTu")),
-            #           column(1,textOutput("gend")),
-            #           column(1,textOutput("col"))
-            #         ),
-            #         fluidRow(
-            #           column(2,strong("Control Group")),
-            #           column(2,"10"),
-            #           column(2,textOutput("aveWeightC")),
-            #           column(2,textOutput("aveAgeC")),
-            #           column(2,textOutput("aveTuC")),
-            #           column(1,textOutput("gendC")),
-            #           column(1,textOutput("colC"))
-            #       )
-            #     )
-            #   )
-            # ),
             fluidRow(
               column(
-                width = 3,
+                width = 4,
                 plotOutput("weight"),
                 tags$script(HTML(
                   "$(document).ready(function() {
@@ -471,7 +439,7 @@ ui <- list(
                 ))
               ),
               column(
-                width = 3,
+                width = 4,
                 plotOutput("age"),
                 tags$script(HTML(
                   "$(document).ready(function() {
@@ -481,7 +449,7 @@ ui <- list(
                 ))
               ),
               column(
-                width = 6,
+                width = 4,
                 plotOutput("tumor"),
                 tags$script(HTML(
                   "$(document).ready(function() {
@@ -493,7 +461,7 @@ ui <- list(
             ),
             fluidRow(
               column(
-                width = 3,
+                width = 4,
                 plotOutput("gender"),
                 tags$script(HTML(
                   "$(document).ready(function() {
@@ -503,7 +471,7 @@ ui <- list(
                 ))
               ),
               column(
-                width = 3,
+                width = 4,
                 plotOutput("color"),
                 tags$script(HTML(
                   "$(document).ready(function() {
@@ -513,163 +481,235 @@ ui <- list(
                 ))
               ),
               column(
-                width = 6,
-                sliderInput(
-                  inputId = "theta",
-                  label = "Choose a Treatment Effect",
-                  min = 0,
-                  max = 1,
-                  value = 0.6,
-                  width = '90%'
-                )
+                width = 4,
+                ## Hiding this slider for now
+                # sliderInput(
+                #   inputId = "theta",
+                #   label = "Choose a Treatment Effect",
+                #   min = 0,
+                #   max = 1,
+                #   value = 0.6,
+                #   width = '90%'
+                # )
               )
             ),
             br(), br(), br(),
             fluidRow(
-              column(4, offset = 2,
-                     bsButton("getdata","Use Raw Data", size = "large")
+              column(
+                width = 4,
+                offset = 2,
+                bsButton(
+                  inputId = "getHandData",
+                  label = "Display Raw Data",
+                  icon = icon("table"),
+                  size = "large",
+                  type = "toggle",
+                  value = 0
+                )
               ),
-              column(4,
-                     bsButton("compare","Compare with Random Selection", size = "large")
+              column(
+                width = 4,
+                bsButton(
+                  inputId = "compare",
+                  label = "Compare with Random Selection",
+                  size = "large"
+                )
               )
             ),
-            conditionalPanel("input.getdata != 0", verbatimTextOutput("dataf"))
+            DT::DTOutput(outputId = "handData")
           )
         ),
         ### Computer Selection Page ----
         tabItem(
           tabName = "computer",
           useShinyjs(),
-          wellPanel(
-            fluidRow(
-              column(
-                width = 2,
-                sliderInput(
-                  inputId = "times",
-                  label = "Number of Simulations",
-                  value = 1,
-                  min = 1,
-                  max = 1000
-                )
-              ),
-              column(
-                width = 8,
-                p("Select a number to run multiple trials. (Hint: Try
-                      selecting 10, 100, 1000, etc.)")
-              ),
+          h2("Letting a Computer Select"),
+          p("The following table and graph are the same as on the Explore Hand
+            Selection page except this time a computer randomly assigned
+            the treatments."),
+          DT::DTOutput(outputId = "compMiceSum"),
+          fluidRow(
+            column(
+              width = 4,
+              plotOutput("compWeight"),
+              tags$script(HTML(
+                "$(document).ready(function() {
+                        document.getElementById('compWeight').setAttribute('aria-label',
+                        `Comparison of mean weight between raspberry and control group.`)
+                        })"
+              ))
+            ),
+            column(
+              width = 4,
+              plotOutput("compAge"),
+              tags$script(HTML(
+                "$(document).ready(function() {
+                        document.getElementById('compAge').setAttribute('aria-label',
+                        `Comparison of mean age between raspberry and control group.`)
+                        })"
+              ))
+            ),
+            column(
+              width = 4,
+              plotOutput("compTumor"),
+              tags$script(HTML(
+                "$(document).ready(function() {
+                        document.getElementById('compTumor').setAttribute('aria-label',
+                        `Comparison of mean tumor mass between raspberry and control group.`)
+                        })"
+              ))
             )
           ),
-          conditionalPanel(
-            condition = "input.times < 1",
-            wellPanel(
-              div(
-                style = "position: relative; text-align: center;",
-                icon("lock"),
-                p("Warning: The input number has to be at least one.")
-              )
+          fluidRow(
+            column(
+              width = 4,
+              plotOutput("compGender"),
+              tags$script(HTML(
+                "$(document).ready(function() {
+                        document.getElementById('compGender').setAttribute('aria-label',
+                        `Comparison of gender between raspberry and control group.`)
+                        })"
+              ))
+            ),
+            column(
+              width = 4,
+              plotOutput("compColor"),
+              tags$script(HTML(
+                "$(document).ready(function() {
+                        document.getElementById('compColor').setAttribute('aria-label',
+                        `Comparison of colors between raspberry and control group.`)
+                        })"
+              ))
             )
           ),
-          conditionalPanel(
-            condition = "input.times >= 1",
-            fluidRow(
-              column(
-                width = 6,
-                tableOutput("computerTable")
-              ),
-              column(
-                width = 6,
-                sliderInput(
-                  "compTheta",
-                  label = "Choose a Treatment Effect",
-                  min = 0,
-                  max = 1,
-                  value = 0.6,
-                  width = '400px'
-                )
-              )
-            ),
-            br(), br(), br(), br(), br(), br(), br(),
-            fluidRow(
-              column(
-                width = 3,
-                plotOutput("compWeightBar"),
-                tags$script(HTML(
-                  "$(document).ready(function() {
-                        document.getElementById('compWeightBar').setAttribute('aria-label',
-                        `Comparison of mean computed generated weight between raspberry and control group.`)
-                        })"
-                ))
-              ),
-              column(
-                width = 3,
-                plotOutput("compAgeBar"),
-                tags$script(HTML(
-                  "$(document).ready(function() {
-                        document.getElementById('compAgeBar').setAttribute('aria-label',
-                        `Comparison of mean computer generated age between raspberry and control group.`)
-                        })"
-                ))
-              ),
-              column(
-                width = 6,
-                plotOutput("compTumorBar"),
-                tags$script(HTML(
-                  "$(document).ready(function() {
-                        document.getElementById('compTumorBar').setAttribute('aria-label',
-                        `Comparison of mean computer generated tumor mass between raspberry and control group.`)
-                        })"
-                ))
-              )
-            ),
-            fluidRow(
-              column(
-                width = 4,
-                plotOutput("compWeightHist"),
-                tags$script(HTML(
-                  "$(document).ready(function() {
-                        document.getElementById('CompWeightHist').setAttribute('aria-label',
-                        `Histogram of differences in weight between groups.`)
-                        })"
-                ))
-              ),
-              column(
-                width = 4,
-                plotOutput("compAgeHist"),
-                tags$script(HTML(
-                  "$(document).ready(function() {
-                        document.getElementById('compAgeHist').setAttribute('aria-label',
-                        `Histogram of differences in age between groups.`)
-                        })"
-                ))
-              ),
-              column(
-                width = 4,
-                plotOutput("compTumorHist"),
-                tags$script(HTML(
-                  "$(document).ready(function() {
-                        document.getElementById('compTumorHist').setAttribute('aria-label',
-                        `Histogram of differences in tumor mass between groups.`)
-                        })"
-                ))
-              )
-            ),
-            div(style = "position:relative; top: -35px;",
-                bsButton(
-                  inputId = "compGetdata",
-                  label = "Use the data from last trial"
-                )
-            ),
-
-            conditionalPanel(
-              condtion = "input.compGetdata != 0",
-              verbatimTextOutput("compDataf")
-            )
-          )
+          bsButton(
+            inputId = "getCompData",
+            label = "Display Raw Data",
+            icon = icon("table"),
+            size = "large",
+            type = "toggle",
+            value = 0
+          ),
+          DT::DTOutput(outputId = "compData"),
+          ## Hiding Simulation Tools for now
+          # wellPanel(
+          #   fluidRow(
+          #     column(
+          #       width = 2,
+          #       sliderInput(
+          #         inputId = "times",
+          #         label = "Number of Simulations",
+          #         value = 1,
+          #         min = 1,
+          #         max = 1000
+          #       )
+          #     ),
+          #     column(
+          #       width = 8,
+          #       p("Select a number to run multiple trials. (Hint: Try
+          #             selecting 10, 100, 1000, etc.)")
+          #     ),
+          #   )
+          # ),
+          # conditionalPanel(
+          #   condition = "input.times < 1",
+          #   wellPanel(
+          #     div(
+          #       style = "position: relative; text-align: center;",
+          #       icon("lock"),
+          #       p("Warning: The input number has to be at least one.")
+          #     )
+          #   )
+          # ),
+          # conditionalPanel(
+          #   condition = "input.times >= 1",
+          #   fluidRow(
+          #     column(
+          #       width = 6,
+          #       tableOutput("computerTable")
+          #     ),
+          #     column(
+          #       width = 6,
+          #       sliderInput(
+          #         "compTheta",
+          #         label = "Choose a Treatment Effect",
+          #         min = 0,
+          #         max = 1,
+          #         value = 0.6,
+          #         width = '400px'
+          #       )
+          #     )
+          #   ),
+          #   br(), br(), br(), br(), br(), br(), br(),
+          #   fluidRow(
+          #     column(
+          #       width = 3,
+          #       plotOutput("compWeightBar"),
+          #       tags$script(HTML(
+          #         "$(document).ready(function() {
+          #               document.getElementById('compWeightBar').setAttribute('aria-label',
+          #               `Comparison of mean computed generated weight between raspberry and control group.`)
+          #               })"
+          #       ))
+          #     ),
+          #     column(
+          #       width = 3,
+          #       plotOutput("compAgeBar"),
+          #       tags$script(HTML(
+          #         "$(document).ready(function() {
+          #               document.getElementById('compAgeBar').setAttribute('aria-label',
+          #               `Comparison of mean computer generated age between raspberry and control group.`)
+          #               })"
+          #       ))
+          #     ),
+          #     column(
+          #       width = 6,
+          #       plotOutput("compTumorBar"),
+          #       tags$script(HTML(
+          #         "$(document).ready(function() {
+          #               document.getElementById('compTumorBar').setAttribute('aria-label',
+          #               `Comparison of mean computer generated tumor mass between raspberry and control group.`)
+          #               })"
+          #       ))
+          #     )
+          #   ),
+          #   fluidRow(
+          #     column(
+          #       width = 4,
+          #       plotOutput("compWeightHist"),
+          #       tags$script(HTML(
+          #         "$(document).ready(function() {
+          #               document.getElementById('CompWeightHist').setAttribute('aria-label',
+          #               `Histogram of differences in weight between groups.`)
+          #               })"
+          #       ))
+          #     ),
+          #     column(
+          #       width = 4,
+          #       plotOutput("compAgeHist"),
+          #       tags$script(HTML(
+          #         "$(document).ready(function() {
+          #               document.getElementById('compAgeHist').setAttribute('aria-label',
+          #               `Histogram of differences in age between groups.`)
+          #               })"
+          #       ))
+          #     ),
+          #     column(
+          #       width = 4,
+          #       plotOutput("compTumorHist"),
+          #       tags$script(HTML(
+          #         "$(document).ready(function() {
+          #               document.getElementById('compTumorHist').setAttribute('aria-label',
+          #               `Histogram of differences in tumor mass between groups.`)
+          #               })"
+          #       ))
+          #     )
+          #   ),
         ),
-        ### Reference Page ----
-        tabItem(
-          tabName = "references",
-          h2("References"),
+      ### Reference Page ----
+      tabItem(
+        tabName = "references",
+        h2("References"),
           p(
             class = "hangingindent",
             "Attali, D. (2020). shinyjs: Easily Improve the User Experience of
@@ -706,11 +746,18 @@ ui <- list(
 
 # Define the Server ----
 server <- function(input, output,session) {
+  mouseCount <- reactiveVal(0)
+  miceBtns <- NA
+  for(i in 1:20) {
+    miceBtns[i] <- paste0("btn", i)
+  }
+  localData <- data
+
   ## Info Button ----
   observeEvent(input$info,{
     sendSweetAlert(
       session = session,
-      title = "Instructions:",
+      title = "Instructions",
       text = "Quickly click on 10 mice to select the treatment group
       and then compare the results with what happens when the mice are
       assigned to groups randomly by the computer",
@@ -727,232 +774,595 @@ server <- function(input, output,session) {
   })
 
   ## Reset Mice Button ----
-  observeEvent(input$reset_button, {js$reset()})
+  observeEvent(input$reset_button, {
+    mouseCount(0)
+    data$handPicked <- NA
+    lapply(miceBtns, updateButton,
+           session = session,
+           style = "info",
+           disabled = FALSE)
+  })
 
   ## Mouse Buttons ----
-  # Save all the actionButton input into a vector for later convenience
-  val <- reactiveValues(btn = c())
-  observe({
-    val$btn[1] = input$btn1
-    val$btn[2] = input$btn2
-    val$btn[3] = input$btn3
-    val$btn[4] = input$btn4
-    val$btn[5] = input$btn5
-    val$btn[6] = input$btn6
-    val$btn[7] = input$btn7
-    val$btn[8] = input$btn8
-    val$btn[9] = input$btn9
-    val$btn[10] = input$btn10
-    val$btn[11] = input$btn11
-    val$btn[12] = input$btn12
-    val$btn[13] = input$btn13
-    val$btn[14] = input$btn14
-    val$btn[15] = input$btn15
-    val$btn[16] = input$btn16
-    val$btn[17] = input$btn17
-    val$btn[18] = input$btn18
-    val$btn[19] = input$btn19
-    val$btn[20] = input$btn20
-  })
-
-  # Create 20 updateButtons for 20 bsButtons in ui
-  observeEvent(val$btn,({
-    for (i in 1:20){
-      if (val$btn[i] == 1){
-        updateButton(session,paste("btn",i,sep = ""), style = "default", disabled = TRUE)
-      }
-    }
-  }))
-
-  #When 10 buttons have been clicked, enable the submit button.
-  ###UPDATE: unable for clicking more mice
-  observe({
-    if (sum(val$btn) == 10){
+  observeEvent(mouseCount(), {
+    if(mouseCount() == 10) {
+      lapply(miceBtns, updateButton, session = session, disabled = TRUE)
       updateButton(
-        session,
+        session = session,
         inputId = "submit",
-        label = "Submit Selection",
-        size = "large",
         disabled = FALSE
       )
-      updateButton(session,'btn1',disabled=TRUE)
-      updateButton(session,'btn2',disabled=TRUE)
-      updateButton(session,'btn3',disabled=TRUE)
-      updateButton(session,'btn4',disabled=TRUE)
-      updateButton(session,'btn5',disabled=TRUE)
-      updateButton(session,'btn6',disabled=TRUE)
-      updateButton(session,'btn7',disabled=TRUE)
-      updateButton(session,'btn8',disabled=TRUE)
-      updateButton(session,'btn9',disabled=TRUE)
-      updateButton(session,'btn10',disabled=TRUE)
-      updateButton(session,'btn11',disabled=TRUE)
-      updateButton(session,'btn12',disabled=TRUE)
-      updateButton(session,'btn13',disabled=TRUE)
-      updateButton(session,'btn14',disabled=TRUE)
-      updateButton(session,'btn15',disabled=TRUE)
-      updateButton(session,'btn16',disabled=TRUE)
-      updateButton(session,'btn17',disabled=TRUE)
-      updateButton(session,'btn18',disabled=TRUE)
-      updateButton(session,'btn19',disabled=TRUE)
-      updateButton(session,'btn20',disabled=TRUE)
-    }
-  })
-  # When more than 10 buttons have been clicked, disable the submit button.
-  observe({
-    if (sum(val$btn) > 10){
-      updateButton(session, "submit", disabled = TRUE)
     }
   })
 
-  ## Counter: count how many buttons have been clicked
-  output$number <- renderText(sum(val$btn))
+  ### Individual Observers
+  observeEvent(input$btn1, {
+    updateButton(
+      session = session,
+      inputId = "btn1",
+      style = "default",
+    )
+    localData[1, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn2, {
+    updateButton(
+      session = session,
+      inputId = "btn2",
+      style = "default",
+    )
+    localData[2, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn3, {
+    updateButton(
+      session = session,
+      inputId = "btn3",
+      style = "default",
+    )
+    localData[3, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn4, {
+    updateButton(
+      session = session,
+      inputId = "btn4",
+      style = "default",
+    )
+    localData[4, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn5, {
+    updateButton(
+      session = session,
+      inputId = "btn5",
+      style = "default",
+    )
+    localData[5, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn6, {
+    updateButton(
+      session = session,
+      inputId = "btn6",
+      style = "default",
+    )
+    localData[6, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn7, {
+    updateButton(
+      session = session,
+      inputId = "btn7",
+      style = "default",
+    )
+    localData[7, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn8, {
+    updateButton(
+      session = session,
+      inputId = "btn8",
+      style = "default",
+    )
+    localData[8, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn9, {
+    updateButton(
+      session = session,
+      inputId = "btn9",
+      style = "default",
+    )
+    localData[9, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn10, {
+    updateButton(
+      session = session,
+      inputId = "btn10",
+      style = "default",
+    )
+    localData[10, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn11, {
+    updateButton(
+      session = session,
+      inputId = "btn11",
+      style = "default",
+    )
+    localData[11, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn12, {
+    updateButton(
+      session = session,
+      inputId = "btn12",
+      style = "default",
+    )
+    localData[12, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn13, {
+    updateButton(
+      session = session,
+      inputId = "btn13",
+      style = "default",
+    )
+    localData[13, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn14, {
+    updateButton(
+      session = session,
+      inputId = "btn14",
+      style = "default",
+    )
+    localData[14, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn15, {
+    updateButton(
+      session = session,
+      inputId = "btn15",
+      style = "default",
+    )
+    localData[15, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn16, {
+    updateButton(
+      session = session,
+      inputId = "btn16",
+      style = "default",
+    )
+    localData[16, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn17, {
+    updateButton(
+      session = session,
+      inputId = "btn17",
+      style = "default",
+    )
+    localData[17, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn18, {
+    updateButton(
+      session = session,
+      inputId = "btn18",
+      style = "default",
+    )
+    localData[18, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn19, {
+    updateButton(
+      session = session,
+      inputId = "btn19",
+      style = "default",
+    )
+    localData[19, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+  observeEvent(input$btn20, {
+    updateButton(
+      session = session,
+      inputId = "btn20",
+      style = "default",
+    )
+    localData[20, "handPicked"] <<- "Treatment"
+    mouseCount(mouseCount() + 1)
+  })
+
+  ### Display count of selected mice ----
   output$num <- renderUI({
-    paste("You have selected", sum(val$btn), "mice.")
+    paste("You have selected", mouseCount(), "mice.")
   })
 
-  ## Submit button
+  ## Submit button ----
   #When the submit button is clicked, redirect to the next page.
   observeEvent(input$submit,{
-    updateTabItems(session, "tabs", "summary")
+    updateTabItems(
+      session = session,
+      inputId = "tabs",
+      selected = "summary")
+    ## Do the Computer Assignment
+    localData$compPicked <<- sample(rep(c("Control", "Treatment"), 10), size = 20)
   })
 
-  ## Compare button
-  # When the "compare" button is clicked, redirect to the computer page.
+  ## Hand Picked Summaries ----
+  observeEvent(input$tabs, {
+    if(input$tabs == "summary") {
+      handSummary <- localData %>%
+        dplyr::group_by(handPicked) %>%
+        dplyr::summarize(
+          .groups = "rowwise",
+          samWeight = mean(Weight),
+          samAge = mean(Age),
+          samTumor = mean(Tumor),
+          propBrown = mean(Color),
+          propFemale = mean(Gender)
+        )
+
+      ## Hand Selection Table ----
+      handSummary <- tibble::remove_rownames(handSummary)
+      handSummary <- tibble::column_to_rownames(handSummary, var = "handPicked")
+      names(handSummary) <- c("Mean Weight (g/mouse)",
+                              "Age (wks/mouse)",
+                              "Tumor Mass (mg/mouse)",
+                              "Proportion Brown",
+                              "Proportion Female")
+      output$miceSum <- DT::renderDT(
+        expr = round(handSummary, digits = 3),
+        caption = "Descriptive Statistics for Hand Selected Groups",
+        style = "bootstrap4",
+        rownames = TRUE,
+        autoHideNavigation = TRUE,
+        options = list(
+          responsive = TRUE,
+          scrollX = TRUE,
+          paging = FALSE,
+          searching = FALSE,
+          columnDefs = list(
+            list(className = "dt-center", targets = 1:ncol(handSummary))
+          )
+        )
+      )
+
+      ## Hand Selection Plots ----
+      output$weight <- renderPlot({
+        ggplot(data = aggregate(Weight ~ handPicked, data = localData, FUN = mean),
+               mapping = aes(y = Weight, x = handPicked, fill = handPicked)) +
+          geom_bar(stat = "identity", color = "black") +
+          theme_bw() +
+          theme(legend.position = "none",
+                title = element_text(size = 14),
+                axis.title = element_text(size = 14),
+                axis.text = element_text(size = 14)) +
+          xlab("Raspberry treatment") +
+          ylab("Mean weight (g/mouse)") +
+          labs(title = "Comparison of Mean Weights") +
+          scale_fill_manual(values = c("Control" = raspPalette[2],
+                                       "Treatment" = raspPalette[1],
+                                       "Difference" = raspPalette[3]))
+      })
+
+      output$age <- renderPlot({
+        ggplot(data = aggregate(Age ~ handPicked, data = localData, FUN = mean),
+               mapping = aes(y = Age, x = handPicked, fill = handPicked)) +
+          geom_bar(stat = "identity", color = "black") +
+          theme_bw() +
+          theme(legend.position = "none",
+                title = element_text(size = 14),
+                axis.title = element_text(size = 14),
+                axis.text = element_text(size = 14)) +
+          xlab("Raspberry treatment") +
+          ylab("Mean age (wk/mouse)") +
+          labs(title = "Comparison of Mean Ages") +
+          scale_fill_manual(values = c("Control" = raspPalette[2],
+                                       "Treatment" = raspPalette[1],
+                                       "Difference" = raspPalette[3]))
+      })
+
+      output$tumor <- renderPlot({
+        ggplot(data = aggregate(Tumor ~ handPicked, data = localData, FUN = mean),
+               mapping = aes(y = Tumor, x = handPicked, fill = handPicked)) +
+          geom_bar(stat = "identity", color = "black") +
+          theme_bw() +
+          theme(legend.position = "none",
+                title = element_text(size = 14),
+                axis.title = element_text(size = 14),
+                axis.text = element_text(size = 14)) +
+          xlab("Raspberry treatment") +
+          ylab("Mean Tumor Mass (mg/mouse)") +
+          labs(title = "Comparison of Mean Tumor Masses") +
+          scale_fill_manual(values = c("Control" = raspPalette[2],
+                                       "Treatment" = raspPalette[1],
+                                       "Difference" = raspPalette[3]))
+      })
+
+      output$gender <- renderPlot({
+        localData %>%
+          mutate(genderCat = case_when(
+            Gender == 1 ~ "Female",
+            Gender == 0 ~ "Male"
+          )) %>%
+          ggplot(mapping = aes(y = genderCat,
+                               x = handPicked,
+                               fill = genderCat)) +
+          geom_bar(stat = "identity", position = "stack") +
+          theme_bw() +
+          theme(
+            legend.position = "top",
+            legend.direction = "horizontal",
+            title = element_text(size = 14),
+            axis.title = element_text(size = 14),
+            axis.text = element_text(size = 14),
+            axis.title.y = element_blank(),
+            axis.ticks.y = element_blank(),
+            axis.text.y = element_blank()
+          ) +
+          xlab("Raspberry treatment") +
+          labs(title = "Comparison of Gender",
+               fill = "Gender")
+      })
+
+      output$color <- renderPlot({
+        localData %>%
+          mutate(colorCat = case_when(
+            Color == 1 ~ "Brown",
+            Color == 0 ~ "Black"
+          )) %>%
+          ggplot(mapping = aes(y = colorCat,
+                               x = handPicked,
+                               fill = colorCat)) +
+          geom_bar(stat = "identity", position = "stack") +
+          theme_bw() +
+          theme(
+            legend.position = "top",
+            legend.direction = "horizontal",
+            title = element_text(size = 14),
+            axis.title = element_text(size = 14),
+            axis.text = element_text(size = 14),
+            axis.title.y = element_blank(),
+            axis.ticks.y = element_blank(),
+            axis.text.y = element_blank()
+          ) +
+          xlab("Raspberry treatment") +
+          labs(title = "Comparison of Color",
+               fill = "Color") +
+          scale_fill_manual(values = c("Brown" = "#BB9B7A",
+                                       "Black" = "black"))
+      })
+    }
+  })
+
+  ## Display hand selected data ----
+  observeEvent(input$getHandData, {
+    if (input$getHandData %% 2 == 0){
+      output$handData <- NULL
+    } else if (input$getHandData %% 2 == 1) {
+      temp1 <- localData %>%
+        mutate(Gender = case_when(
+        Gender == 1 ~ "Female",
+        Gender == 0 ~ "Male"
+      )) %>%
+        mutate(Color = case_when(
+          Color == 1 ~ "Brown",
+          Color == 0 ~ "Black"
+        ))
+      output$handData <- DT::renderDT(
+        expr = temp1,
+        caption = "Hand Selected Mouse Data",
+        style = "bootstrap4",
+        rownames = TRUE,
+        autoHideNavigation = TRUE,
+        options = list(
+          responsive = TRUE,
+          scrollX = TRUE,
+          paging = TRUE,
+          searching = TRUE,
+          columnDefs = list(
+            list(className = "dt-center", targets = 1:ncol(localData))
+          )
+        )
+      )
+    }
+  })
+
+  ## Compare button, move to computer simulation page ----
   observeEvent(input$compare,{
-    updateTabItems(session, "tabs", "computer")
+    updateTabItems(
+      session = session,
+      inputId = "tabs",
+      selected = "computer")
   })
 
-  #use the "model" function and input theta
-  #TuM <- model(data,val,input$theta)
+  ## Computer Picked Summaries ----
+  observeEvent(input$tabs, {
+    if(input$tabs == "computer") {
+      compSummary <- localData %>%
+        dplyr::group_by(compPicked) %>%
+        dplyr::summarize(
+          .groups = "rowwise",
+          samWeight = mean(Weight),
+          samAge = mean(Age),
+          samTumor = mean(Tumor),
+          propBrown = mean(Color),
+          propFemale = mean(Gender)
+        )
 
-  #Define vectors for the summary data frame
-  totalSelected <- c(10, 10)
-  # aveWeight <- c(sum(val$btn * data[,"Weight(g)"])/10, sum((1-val$btn)*data[,"Weight(g)"])/10)
-  # aveAge <- c(sum(val$btn * data[,"Age(wks)"])/10, sum((1-val$btn)*data[,"Age(wks)"])/10)
-  # aveTu <- c(sum(val$btn * TuM)/10, sum((1-val$btn) * TuM)/10)
-  # gend <- c(sum(val$btn * data[,"Gender"])/10, sum((1-val$btn) * data[,"Gender"])/10)
-  # col <- c(sum(val$btn * data[,"Color"])/10, sum((1-val$btn) * data[,"Color"])/10)
+      ## Computer Selection Table ----
+      compSummary <- tibble::remove_rownames(compSummary)
+      compSummary <- tibble::column_to_rownames(compSummary, var = "compPicked")
+      names(compSummary) <- c("Mean Weight (g/mouse)",
+                              "Age (wks/mouse)",
+                              "Tumor Mass (mg/mouse)",
+                              "Proportion Brown",
+                              "Proportion Female")
+      output$compMiceSum <- DT::renderDT(
+        expr = round(compSummary, digits = 3),
+        caption = "Descriptive Statistics for Computer Selected Groups",
+        style = "bootstrap4",
+        rownames = TRUE,
+        autoHideNavigation = TRUE,
+        options = list(
+          responsive = TRUE,
+          scrollX = TRUE,
+          paging = FALSE,
+          searching = FALSE,
+          columnDefs = list(
+            list(className = "dt-center", targets = 1:ncol(compSummary))
+          )
+        )
+      )
 
-  #Create dataframe for summary table
-  # miceSumData <- data.frame(
-  #   Group = c("Raspberry Group","Control Group"),
-  #   totalSelected,
-  #   aveWeight,
-  #   aveAge,
-  #   aveTu,
-  #   gend,
-  #   col)
-  # names(miceSumData) <- c("Total Selected",
-  #                         "Mean Weight (g)",
-  #                         "Mean Age (wks)",
-  #                         "Mean Tumor Mass (g)",
-  #                         "Proportion Female",
-  #                         "Proportion Brown")
-  #Prepare summary table for summary tab
-  # output$miceSum <- DT::renderDT(
-  #   expr = miceSumData,
-  #   caption = "Hand Selection Data",
-  #   style = "bootstrap4",
-  #   rownames = FALSE,
-  #   options = list(
-  #     responsive = TRUE,
-  #     scrollX = TRUE,
-  #     columnDefs = list(
-  #       # Notice the use of ncol on your data frame; leave the 1 as is.
-  #       list(className = 'dt-center', targets = 1:ncol(miceSumData))
-  #     )
-  #   )
-  # )
-  #
-  # output$weight = renderPlot({
-  #   wei = sum(val$btn * data[,"Weight(g)"])/10
-  #   weiC = sum((1 - val$btn) * data[,"Weight(g)"])/10
-  #   barplot(c(wei,weiC),
-  #           names.arg = c("Raspberry","Control"),
-  #           main = "Comparison of Average Weight",
-  #           ylab = "Weight(g)",
-  #           ylim = c(0,60),
-  #           col = c("#C7053D","beige"),
-  #           cex.axis = 1.25,
-  #           cex.names = 1.25)
-  # }, width = 250, height = 350)
-  #
-  # output$age = renderPlot({
-  #   age = sum(val$btn * data[,"Age(wks)"])/10
-  #   ageC = sum((1 - val$btn) * data[,"Age(wks)"])/10
-  #   barplot(c(age,ageC),
-  #           names.arg = c("Raspberry","Control"),
-  #           main = "Comparison of Average Age",
-  #           ylab = "Age(wks)",
-  #           ylim = c(0,12),
-  #           col = c("#C7053D","beige"),
-  #           cex.axis = 1.25,
-  #           cex.names = 1.25
-  #   )
-  # }, width = 250, height = 350)
-  #
-  # output$tumor = renderPlot({
-  #   TuM = model(data,val,input$theta)
-  #   Tum = sum(val$btn * TuM)/10
-  #   TumC = sum((1-val$btn) * TuM)/10
-  #   barplot(c(Tum,TumC,(TumC-Tum)),
-  #           names.arg = c("Raspberry Group","Control Group","Difference"),
-  #           main = "Comparison of Tumor Mass",
-  #           ylab = "Tumor Mass(mg)",
-  #           ylim = c(0,600),
-  #           col = c("#C7053D","beige","#1C2C5B"),
-  #           width = 5,
-  #           xlim = c(1,30),
-  #           cex.axis = 1.25,
-  #           cex.names = 1.25
-  #   )
-  #   legend(
-  #     x = "right",
-  #     c("Raspberry Group","Control Group","Difference"),
-  #     col = c("#C7053D","beige","#1C2C5B"),
-  #     fill=c("#C7053D","beige","#1C2C5B")
-  #   )
-  # },width = 500, height = 350)
-  #
-  # output$gender = renderPlot({
-  #   barplot(prop.table(rbind(c((sum(val$btn * data[,"Gender"])),
-  #                              (sum((1 - val$btn) * data[,"Gender"]))),
-  #                            c((sum(val$btn * (1 - data[,"Gender"]))),
-  #                              (sum((1 - val$btn) * (1 - data[,"Gender"]))))),2),
-  #           col = c("#FBB4AE","#B3CDE3"),
-  #           names.arg = c("Raspberry","Control"),
-  #           main = "Comparison of gender",
-  #           width = 6,xlim = c(1,16),
-  #           cex.axis = 1.25,
-  #           cex.names = 1.25
-  #   )
-  #   legend(
-  #     x = "right",
-  #     c("Female","Male"),
-  #     col = c("#FBB4AE","#B3CDE3"),
-  #     fill = c("#FBB4AE","#B3CDE3")
-  #   )
-  # },width = 270, height = 350)
-  #
-  # output$color = renderPlot({
-  #   barplot(prop.table(rbind(c((sum(val$btn * data[,"Color"])),
-  #                              (sum((1 - val$btn) * data[,"Color"]))),
-  #                            c((sum(val$btn * (1 - data[,"Color"]))),
-  #                              (sum((1 - val$btn) * (1 - data[,"Color"]))))),2),
-  #           col = c("#BE996E","black"),
-  #           names.arg = c("Raspberry","Control"),
-  #           main = "Comparison of colors",
-  #           width = 6,xlim = c(1,16),
-  #           cex.axis = 1.25,
-  #           cex.names = 1.25
-  #   )
-  #   legend(
-  #     x = "right",
-  #     c("Brown","Black"),
-  #     col = c("#BE996E","black"),
-  #     fill = c("#BE996E","black")
-  #   )
-  # },width = 270, height = 350)
+      ## Computer Selection Plots ----
+      output$compWeight <- renderPlot({
+        ggplot(data = aggregate(Weight ~ compPicked, data = localData, FUN = mean),
+               mapping = aes(y = Weight, x = compPicked, fill = compPicked)) +
+          geom_bar(stat = "identity", color = "black") +
+          theme_bw() +
+          theme(legend.position = "none",
+                title = element_text(size = 14),
+                axis.title = element_text(size = 14),
+                axis.text = element_text(size = 14)) +
+          xlab("Raspberry treatment") +
+          ylab("Mean weight (g/mouse)") +
+          labs(title = "Comparison of Mean Weights") +
+          scale_fill_manual(values = c("Control" = raspPalette[2],
+                                       "Treatment" = raspPalette[1],
+                                       "Difference" = raspPalette[3]))
+      })
+
+      output$compAge <- renderPlot({
+        ggplot(data = aggregate(Age ~ compPicked, data = localData, FUN = mean),
+               mapping = aes(y = Age, x = compPicked, fill = compPicked)) +
+          geom_bar(stat = "identity", color = "black") +
+          theme_bw() +
+          theme(legend.position = "none",
+                title = element_text(size = 14),
+                axis.title = element_text(size = 14),
+                axis.text = element_text(size = 14)) +
+          xlab("Raspberry treatment") +
+          ylab("Mean age (wk/mouse)") +
+          labs(title = "Comparison of Mean Ages") +
+          scale_fill_manual(values = c("Control" = raspPalette[2],
+                                       "Treatment" = raspPalette[1],
+                                       "Difference" = raspPalette[3]))
+      })
+
+      output$compTumor <- renderPlot({
+        ggplot(data = aggregate(Tumor ~ compPicked, data = localData, FUN = mean),
+               mapping = aes(y = Tumor, x = compPicked, fill = compPicked)) +
+          geom_bar(stat = "identity", color = "black") +
+          theme_bw() +
+          theme(legend.position = "none",
+                title = element_text(size = 14),
+                axis.title = element_text(size = 14),
+                axis.text = element_text(size = 14)) +
+          xlab("Raspberry treatment") +
+          ylab("Mean Tumor Mass (mg/mouse)") +
+          labs(title = "Comparison of Mean Tumor Masses") +
+          scale_fill_manual(values = c("Control" = raspPalette[2],
+                                       "Treatment" = raspPalette[1],
+                                       "Difference" = raspPalette[3]))
+      })
+
+      output$compGender <- renderPlot({
+        localData %>%
+          mutate(genderCat = case_when(
+            Gender == 1 ~ "Female",
+            Gender == 0 ~ "Male"
+          )) %>%
+          ggplot(mapping = aes(y = genderCat,
+                               x = compPicked,
+                               fill = genderCat)) +
+          geom_bar(stat = "identity", position = "stack") +
+          theme_bw() +
+          theme(
+            legend.position = "top",
+            legend.direction = "horizontal",
+            title = element_text(size = 14),
+            axis.title = element_text(size = 14),
+            axis.text = element_text(size = 14),
+            axis.title.y = element_blank(),
+            axis.ticks.y = element_blank(),
+            axis.text.y = element_blank()
+          ) +
+          xlab("Raspberry treatment") +
+          labs(title = "Comparison of Gender",
+               fill = "Gender")
+      })
+
+      output$compColor <- renderPlot({
+        localData %>%
+          mutate(colorCat = case_when(
+            Color == 1 ~ "Brown",
+            Color == 0 ~ "Black"
+          )) %>%
+          ggplot(mapping = aes(y = colorCat,
+                               x = compPicked,
+                               fill = colorCat)) +
+          geom_bar(stat = "identity", position = "stack") +
+          theme_bw() +
+          theme(
+            legend.position = "top",
+            legend.direction = "horizontal",
+            title = element_text(size = 14),
+            axis.title = element_text(size = 14),
+            axis.text = element_text(size = 14),
+            axis.title.y = element_blank(),
+            axis.ticks.y = element_blank(),
+            axis.text.y = element_blank()
+          ) +
+          xlab("Raspberry treatment") +
+          labs(title = "Comparison of Color",
+               fill = "Color") +
+          scale_fill_manual(values = c("Brown" = "#BB9B7A",
+                                       "Black" = "black"))
+      })
+    }
+  })
+
+  ## Display computer selected data ----
+  observeEvent(input$getCompData, {
+    if (input$getCompData %% 2 == 0){
+      output$compData <- NULL
+    } else if (input$getCompData %% 2 == 1) {
+      temp2 <- localData %>%
+        mutate(Gender = case_when(
+          Gender == 1 ~ "Female",
+          Gender == 0 ~ "Male"
+        )) %>%
+        mutate(Color = case_when(
+          Color == 1 ~ "Brown",
+          Color == 0 ~ "Black"
+        ))
+      output$compData <- DT::renderDT(
+        expr = temp2,
+        caption = "Computer Selected Mouse Data",
+        style = "bootstrap4",
+        rownames = TRUE,
+        autoHideNavigation = TRUE,
+        options = list(
+          responsive = TRUE,
+          scrollX = TRUE,
+          paging = TRUE,
+          searching = TRUE,
+          columnDefs = list(
+            list(className = "dt-center", targets = 1:ncol(localData))
+          )
+        )
+      )
+    }
+  })
+
+  # #use the "model" function and input theta
+  # TuM <- model(data, val, input$theta)
   #
   # ##Print raw data with assigned group
   # output$dataf = renderPrint({
