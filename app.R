@@ -791,7 +791,7 @@ server <- function(input, output,session) {
   ## Reset Mice Button ----
   observeEvent(input$reset_button, {
     mouseCount(0)
-    data$handPicked <- NA
+    localData$handPicked <<- "Control"
     lapply(miceBtns, updateButton,
            session = session,
            style = "info",
