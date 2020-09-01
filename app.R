@@ -17,13 +17,6 @@ APP_DESCP  <<- paste(
 ## End App Meta Data------------------------------------------------------------
 
 # Global Functions/Constants ----
-## Disable all the buttons ----
-disableActionButton <- function(id,session) {
-  session$sendCustomMessage(type="jsCode",
-                            list(code= paste("$('#",id,"').prop('disabled',true)"
-                                             ,sep="")))
-}
-
 raspPalette <- c("#BC204B", "#F5F5DC", "#1E407C" )
 small <- 100
 medium <- 130
@@ -85,7 +78,7 @@ ui <- list(
       sidebarMenu(
         id = "tabs",
         menuItem(text = "Overview", tabName = "overview", icon = icon("dashboard")),
-        menuItem(text = "Hand Selection", tabName = "hand", icon = icon("wpexplorer")),
+        menuItem(text = "Select by Hand", tabName = "hand", icon = icon("wpexplorer")),
         menuItem(text = "Explore Hand Selection", tabName = "summary", icon = icon("wpexplorer")),
         menuItem(text = "Computer Selection", tabName = "computer", icon = icon("wpexplorer")),
         menuItem(text = "References", tabName = "references", icon = icon("leanpub"))
@@ -154,7 +147,7 @@ ui <- list(
           fluidRow(
             column(
               width = 2,
-              offset = 1,
+              offset = 3,
               bsButton(
                 inputId = "btn1",
                 label = tags$img(src = "blackMouse.png",
@@ -166,6 +159,7 @@ ui <- list(
             ),
             column(
               width = 1,
+              offset = 1,
               bsButton(
                 inputId = "btn2",
                 label = tags$img(src = "brownMouse.png",
@@ -174,6 +168,11 @@ ui <- list(
                 ),
                 style = "info"
               )
+            )
+          ),
+          fluidRow(
+            column(
+              width = 4,
             ),
             column(
               width = 2,
@@ -197,10 +196,11 @@ ui <- list(
                 style = "info"
               )
             )
-          ), br(),br(),
+          ), br(),
           fluidRow(
             column(
               width = 2,
+              offset = 4,
               bsButton(
                 inputId = "btn5",
                 label = tags$img(src = "brownMouse.png",
@@ -209,10 +209,12 @@ ui <- list(
                 ),
                 style = "info"
               )
-            ),
+            )
+          ),
+          fluidRow(
             column(
               width = 1,
-              offset = 0,
+              offset = 2,
               bsButton(
                 inputId = "btn6",
                 label = tags$img(src = "brownMouse.png",
@@ -245,11 +247,11 @@ ui <- list(
                 style = "info"
               )
             )
-          ), br(),br(),
+          ), br(),
           fluidRow(
             column(
               width = 1,
-              offset = 1,
+              offset = 3,
               bsButton(
                 inputId = "btn9",
                 label = tags$img(src = "brownMouse.png",
@@ -258,10 +260,12 @@ ui <- list(
                 ),
                 style = "info"
               )
-            ),
+            )
+          ),
+          fluidRow(
             column(
               width = 2,
-              offset = 0,
+              offset = 2,
               bsButton(
                 inputId = "btn10",
                 label = tags$img(src = "blackMouse.png",
@@ -293,10 +297,11 @@ ui <- list(
                 style = "info"
               )
             )
-          ), br(),br(),
+          ), br(),
           fluidRow(
             column(
               width = 1,
+              offset = 1,
               bsButton(
                 inputId = "btn13",
                 label = tags$img(src = "blackMouse.png",
@@ -305,14 +310,16 @@ ui <- list(
                 ),
                 style = "info"
               )
-            ),
+            )
+          ),
+          fluidRow(
             column(
-              width = 1,
+              width = 2,
               bsButton(
                 inputId = "btn14",
                 label = tags$img(src = "blackMouse.png",
-                                 width = small,
-                                 alt = "small brown mouse"
+                                 width = large,
+                                 alt = "large black mouse"
                 ),
                 style = "info"
               )
@@ -327,23 +334,25 @@ ui <- list(
                 ),
                 style = "info"
               )
-            ),
+            )
+          ),
+          fluidRow(
             column(
               width = 3,
               bsButton(
                 inputId = "btn16",
                 label = tags$img(src = "blackMouse.png",
-                                 width = large,
-                                 alt = "large black mouse"
+                                 width = small,
+                                 alt = "small black mouse"
                 ),
                 style = "info"
               )
             ),
-          ), br(),br(),
+          ),
           fluidRow(
             column(
               width = 1,
-              offset = 1,
+              offset = 5,
               bsButton(
                 inputId = "btn17",
                 label = tags$img(src = "blackMouse.png",
@@ -364,10 +373,12 @@ ui <- list(
                 ),
                 style = "info"
               )
-            ),
+            )
+          ),
+          fluidRow(
             column(
               width = 1,
-              offset = 0,
+              offset = 3,
               bsButton(
                 inputId = "btn19",
                 label = tags$img(src = "brownMouse.png",
@@ -379,6 +390,7 @@ ui <- list(
             ),
             column(
               width = 2,
+              offset = 1,
               bsButton(
                 inputId = "btn20",
                 label = tags$img(src = "brownMouse.png",
@@ -415,7 +427,7 @@ ui <- list(
         ### Explore Hand Selection Page ----
         tabItem(
           tabName = "summary",
-          h2("Summary of Hand-Selected  for Comparison"),
+          h2("Summary of Hand-Selected Mice for Comparison"),
           conditionalPanel(
             condition = "input.submit == 0",
             br(),br(),br(),
@@ -526,7 +538,7 @@ ui <- list(
         tabItem(
           tabName = "computer",
           useShinyjs(),
-          h2("Letting a Computer Select"),
+          h2("Summary of Computer-Selected Mice for Comparison"),
           p("The following table and graph are the same as on the Explore Hand
             Selection page except this time a computer randomly assigned
             the treatments."),
@@ -1029,6 +1041,7 @@ server <- function(input, output,session) {
           scrollX = TRUE,
           paging = FALSE,
           searching = FALSE,
+          info = FALSE,
           columnDefs = list(
             list(className = "dt-center", targets = 1:ncol(handSummary))
           )
@@ -1217,6 +1230,7 @@ server <- function(input, output,session) {
           scrollX = TRUE,
           paging = FALSE,
           searching = FALSE,
+          info = FALSE,
           columnDefs = list(
             list(className = "dt-center", targets = 1:ncol(compSummary))
           )
