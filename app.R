@@ -725,34 +725,38 @@ ui <- list(
       tabItem(
         tabName = "references",
         h2("References"),
-          p(
-            class = "hangingindent",
-            "Attali, D. (2020). shinyjs: Easily Improve the User Experience of
+        p(
+          class = "hangingindent",
+          "Attali, D. (2020). shinyjs: Easily Improve the User Experience of
               Your Shiny Apps in Seconds. R package version 1.1. Available from
               https://CRAN.R-project.org/package=shinyjs"
-          ),
-          p(
-            class = "hangingindent",
-            "Bailey, E. (2015). shinyBS: Twitter Bootstrap Components for Shiny.
+        ),
+        p(
+          class = "hangingindent",
+          "Bailey, E. (2015). shinyBS: Twitter Bootstrap Components for Shiny.
                R package version 0.61. Available from https://CRAN.R-project.org/package=shinyBS"
-          ),
-          p(
-            class = "hangingindent",
-            "Carey, R. and Hatfield, N. (2020). boastUtils: BOAST Utilities. R
+        ),
+        p(
+          class = "hangingindent",
+          "Carey, R. and Hatfield, N. (2020). boastUtils: BOAST Utilities. R
               package version 0.1.6.1. Available from https://github.com/EducationShinyAppTeam/boastUtils"
-          ),
-          p(
-            class = "hangingindent",
-            "Chang, W. and Borges Ribeiro, B. (2018). shinydashboard: Create
+        ),
+        p(
+          class = "hangingindent",
+          "Chang, W. and Borges Ribeiro, B. (2018). shinydashboard: Create
               Dashboards with 'Shiny'. R package version 0.7.1. Available from
               https://CRAN.R-project.org/package=shinydashboard"
-          ),
-          p(
-            class = "hangingindent",
-            "Chang, W., Cheng, J., Allaire, J., Xie, Y., and McPherson, J. (2020).
+        ),
+        p(
+          class = "hangingindent",
+          "Chang, W., Cheng, J., Allaire, J., Xie, Y., and McPherson, J. (2020).
               shiny: Web Application Framework for R. R package version 1.5.0. Available
               from https://CRAN.R-project.org/package=shiny"
-          )
+        ),
+        br(),
+        br(),
+        br(),
+        boastUtils::copyrightInfo()
         )
       )
     )
