@@ -1,0 +1,24 @@
+Title: Mouse Experiment for Random Assignment
+ShortName: Random Assignment
+Date: 2021-08-30
+Lifecycle: maturing
+Authors@R: c(
+    person(given = "Yuxin", family = "Zhang", role = c("aut", "cre")),
+    person(given = "Luxin", family = "Wang", role = c("ctb")),
+    person(given = "Thomas", family = "McIntyre", role = c("ctb")),
+    person(given = "Chenese", family = "Gray", role = c("aut")),
+    person(given = "Dennis", family = "Pearl", role = c("aut")),
+    person(given = "Neil", family = "Hatfield", email = "neil.hatfield@psu.edu", role = c("aut"))
+  )
+Chapter: Data Gathering
+Description: This app will allow users to explore what happens when they attempt to do their own 'random' selection rather than a computer.
+LearningObjectives: c(
+    "The student will learn to understand Concept A in way z.",
+    "The student will learn to understand Concept B as description y."
+  )
+DisplayMode: Normal
+URL: https://psu-eberly.shinyapps.io/Sample_App
+BugReports: https://github.com/EducationShinyAppTeam/Sample_App/issues
+License: CC-BY-NC-SA-4.0
+Tags: simulation
+Type: Shiny

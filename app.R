@@ -8,14 +8,6 @@ library(ggplot2)
 library(tidyverse)
 library(boastUtils)
 
-## App Meta Data----------------------------------------------------------------
-APP_TITLE  <<- "Mouse Experiment for Random Assignment"
-APP_DESCP  <<- paste(
-  "This app will allow users to explore what happens when they attempt to do their",
-  "own 'random' selection rather than a computer."
-)
-## End App Meta Data------------------------------------------------------------
-
 # Global Functions/Constants ----
 raspPalette <- c("#BC204B", "#F5F5DC", "#1E407C" )
 small <- 100
@@ -68,6 +60,10 @@ ui <- list(
       title = "Random Assignment",
       titleWidth = 250,
       tags$li(class = "dropdown", actionLink("info", icon("info"))),
+      tags$li(
+        class = "dropdown",
+        boastUtils::surveyLink("Mouse_Experiment_on_Random_Assignment")
+      ),
       tags$li(class = "dropdown",
               tags$a(href='https://shinyapps.science.psu.edu/',
                      icon("home")))
@@ -76,7 +72,7 @@ ui <- list(
     dashboardSidebar(
       width = 250,
       sidebarMenu(
-        id = "tabs",
+        id = "pages",
         menuItem(text = "Overview", tabName = "overview", icon = icon("dashboard")),
         menuItem(text = "Select by Hand", tabName = "hand", icon = icon("wpexplorer")),
         menuItem(text = "Explore Hand Selection", tabName = "summary", icon = icon("wpexplorer")),
@@ -132,7 +128,7 @@ ui <- list(
           p("This app was oringinally developed and coded by Yuxin Zhang and updated by Luxin
             Wang and Thomas McIntyre based on extending the idea by Dennis Pearl and Tom Santner.
             The current version of the app was modified by Chenese Gray."),
-          div(class = "updated", "Last Update: 8/31/20 by NJH.")
+          div(class = "updated", "Last Update: 8/30/21 by NJH.")
         ),
         ### Hand Selection Page ----
         tabItem(
@@ -788,7 +784,7 @@ server <- function(input, output,session) {
   observeEvent(input$go,{
     updateTabItems(
       session = session,
-      inputId = "tabs",
+      inputId = "pages",
       selected = "hand")
   })
 
@@ -1006,15 +1002,15 @@ server <- function(input, output,session) {
   observeEvent(input$submit,{
     updateTabItems(
       session = session,
-      inputId = "tabs",
+      inputId = "pages",
       selected = "summary")
     ## Do the Computer Assignment
     localData$compPicked <<- sample(rep(c("Control", "Treatment"), 10), size = 20)
   })
 
   ## Hand Picked Summaries ----
-  observeEvent(input$tabs, {
-    if(input$tabs == "summary") {
+  observeEvent(input$pages, {
+    if(input$pages == "summary") {
       handSummary <- localData %>%
         dplyr::group_by(handPicked) %>%
         dplyr::summarize(
@@ -1197,13 +1193,13 @@ server <- function(input, output,session) {
   observeEvent(input$compare,{
     updateTabItems(
       session = session,
-      inputId = "tabs",
+      inputId = "pages",
       selected = "computer")
   })
 
   ## Computer Picked Summaries ----
-  observeEvent(input$tabs, {
-    if(input$tabs == "computer") {
+  observeEvent(input$pages, {
+    if(input$pages == "computer") {
       compSummary <- localData %>%
         dplyr::group_by(compPicked) %>%
         dplyr::summarize(
