@@ -717,42 +717,42 @@ ui <- list(
           #     )
           #   ),
         ),
-      ### Reference Page ----
-      tabItem(
-        tabName = "references",
-        h2("References"),
-        p(
-          class = "hangingindent",
-          "Attali, D. (2020). shinyjs: Easily Improve the User Experience of
+        ### Reference Page ----
+        tabItem(
+          tabName = "references",
+          h2("References"),
+          p(
+            class = "hangingindent",
+            "Attali, D. (2020). shinyjs: Easily Improve the User Experience of
               Your Shiny Apps in Seconds. R package version 1.1. Available from
               https://CRAN.R-project.org/package=shinyjs"
-        ),
-        p(
-          class = "hangingindent",
-          "Bailey, E. (2015). shinyBS: Twitter Bootstrap Components for Shiny.
+          ),
+          p(
+            class = "hangingindent",
+            "Bailey, E. (2015). shinyBS: Twitter Bootstrap Components for Shiny.
                R package version 0.61. Available from https://CRAN.R-project.org/package=shinyBS"
-        ),
-        p(
-          class = "hangingindent",
-          "Carey, R. and Hatfield, N. (2020). boastUtils: BOAST Utilities. R
+          ),
+          p(
+            class = "hangingindent",
+            "Carey, R. and Hatfield, N. (2020). boastUtils: BOAST Utilities. R
               package version 0.1.6.1. Available from https://github.com/EducationShinyAppTeam/boastUtils"
-        ),
-        p(
-          class = "hangingindent",
-          "Chang, W. and Borges Ribeiro, B. (2018). shinydashboard: Create
+          ),
+          p(
+            class = "hangingindent",
+            "Chang, W. and Borges Ribeiro, B. (2018). shinydashboard: Create
               Dashboards with 'Shiny'. R package version 0.7.1. Available from
               https://CRAN.R-project.org/package=shinydashboard"
-        ),
-        p(
-          class = "hangingindent",
-          "Chang, W., Cheng, J., Allaire, J., Xie, Y., and McPherson, J. (2020).
+          ),
+          p(
+            class = "hangingindent",
+            "Chang, W., Cheng, J., Allaire, J., Xie, Y., and McPherson, J. (2020).
               shiny: Web Application Framework for R. R package version 1.5.0. Available
               from https://CRAN.R-project.org/package=shiny"
-        ),
-        br(),
-        br(),
-        br(),
-        boastUtils::copyrightInfo()
+          ),
+          br(),
+          br(),
+          br(),
+          boastUtils::copyrightInfo()
         )
       )
     )
@@ -794,7 +794,7 @@ server <- function(input, output,session) {
       })
     })
   })
-
+  
   ## Info Button ----
   observeEvent(input$info,{
     sendSweetAlert(
@@ -806,7 +806,7 @@ server <- function(input, output,session) {
       type = "info"
     )
   })
-
+  
   ## Go button ----
   observeEvent(input$go,{
     updateTabItems(
@@ -814,7 +814,7 @@ server <- function(input, output,session) {
       inputId = "pages",
       selected = "hand")
   })
-
+  
   ## Reset Mice Button ----
   observeEvent(input$reset_button, {
     mouseCount(0)
@@ -824,7 +824,7 @@ server <- function(input, output,session) {
            style = "info",
            disabled = FALSE)
   })
-
+  
   ## Mouse Buttons ----
   observeEvent(mouseCount(), {
     if(mouseCount() == 10) {
@@ -836,12 +836,12 @@ server <- function(input, output,session) {
       )
     }
   })
-
+  
   ### Display count of selected mice ----
   output$num <- renderUI({
     paste("You have selected", mouseCount(), "mice.")
   })
-
+  
   ## Submit button ----
   #When the submit button is clicked, redirect to the next page.
   observeEvent(input$submit,{
@@ -852,7 +852,7 @@ server <- function(input, output,session) {
     ## Do the Computer Assignment
     localData$compPicked <<- sample(rep(c("Control", "Treatment"), 10), size = 20)
   })
-
+  
   ## Hand Picked Summaries ----
   observeEvent(input$pages, {
     if(input$pages == "summary") {
@@ -866,7 +866,7 @@ server <- function(input, output,session) {
           propBrown = mean(Color),
           propFemale = mean(Gender)
         )
-
+      
       ## Hand Selection Table ----
       handSummary <- tibble::remove_rownames(handSummary)
       handSummary <- tibble::column_to_rownames(handSummary, var = "handPicked")
@@ -903,7 +903,7 @@ server <- function(input, output,session) {
       )
       
       boastUtils::storeStatement(session, stmt)
-
+      
       ## Hand Selection Plots ----
       output$weight <- renderPlot({
         ggplot(data = aggregate(Weight ~ handPicked, data = localData, FUN = mean),
@@ -921,7 +921,7 @@ server <- function(input, output,session) {
                                        "Treatment" = raspPalette[1],
                                        "Difference" = raspPalette[3]))
       })
-
+      
       output$age <- renderPlot({
         ggplot(data = aggregate(Age ~ handPicked, data = localData, FUN = mean),
                mapping = aes(y = Age, x = handPicked, fill = handPicked)) +
@@ -938,7 +938,7 @@ server <- function(input, output,session) {
                                        "Treatment" = raspPalette[1],
                                        "Difference" = raspPalette[3]))
       })
-
+      
       output$tumor <- renderPlot({
         ggplot(data = aggregate(Tumor ~ handPicked, data = localData, FUN = mean),
                mapping = aes(y = Tumor, x = handPicked, fill = handPicked)) +
@@ -955,7 +955,7 @@ server <- function(input, output,session) {
                                        "Treatment" = raspPalette[1],
                                        "Difference" = raspPalette[3]))
       })
-
+      
       output$gender <- renderPlot({
         localData %>%
           mutate(genderCat = case_when(
@@ -981,7 +981,7 @@ server <- function(input, output,session) {
           labs(title = "Comparison of Gender",
                fill = "Gender")
       })
-
+      
       output$color <- renderPlot({
         localData %>%
           mutate(colorCat = case_when(
@@ -1011,7 +1011,7 @@ server <- function(input, output,session) {
       })
     }
   })
-
+  
   ## Display hand selected data ----
   observeEvent(input$getHandData, {
     if (input$getHandData %% 2 == 0){
@@ -1019,9 +1019,9 @@ server <- function(input, output,session) {
     } else if (input$getHandData %% 2 == 1) {
       temp1 <- localData %>%
         mutate(Gender = case_when(
-        Gender == 1 ~ "Female",
-        Gender == 0 ~ "Male"
-      )) %>%
+          Gender == 1 ~ "Female",
+          Gender == 0 ~ "Male"
+        )) %>%
         mutate(Color = case_when(
           Color == 1 ~ "Brown",
           Color == 0 ~ "Black"
@@ -1044,7 +1044,7 @@ server <- function(input, output,session) {
       )
     }
   })
-
+  
   ## Compare button, move to computer simulation page ----
   observeEvent(input$compare,{
     updateTabItems(
@@ -1052,7 +1052,7 @@ server <- function(input, output,session) {
       inputId = "pages",
       selected = "computer")
   })
-
+  
   ## Computer Picked Summaries ----
   observeEvent(input$pages, {
     if(input$pages == "computer") {
@@ -1066,7 +1066,7 @@ server <- function(input, output,session) {
           propBrown = mean(Color),
           propFemale = mean(Gender)
         )
-
+      
       ## Computer Selection Table ----
       compSummary <- tibble::remove_rownames(compSummary)
       compSummary <- tibble::column_to_rownames(compSummary, var = "compPicked")
@@ -1102,7 +1102,7 @@ server <- function(input, output,session) {
       )
       
       boastUtils::storeStatement(session, stmt)
-
+      
       ## Computer Selection Plots ----
       output$compWeight <- renderPlot({
         ggplot(data = aggregate(Weight ~ compPicked, data = localData, FUN = mean),
@@ -1120,7 +1120,7 @@ server <- function(input, output,session) {
                                        "Treatment" = raspPalette[1],
                                        "Difference" = raspPalette[3]))
       })
-
+      
       output$compAge <- renderPlot({
         ggplot(data = aggregate(Age ~ compPicked, data = localData, FUN = mean),
                mapping = aes(y = Age, x = compPicked, fill = compPicked)) +
@@ -1137,7 +1137,7 @@ server <- function(input, output,session) {
                                        "Treatment" = raspPalette[1],
                                        "Difference" = raspPalette[3]))
       })
-
+      
       output$compTumor <- renderPlot({
         ggplot(data = aggregate(Tumor ~ compPicked, data = localData, FUN = mean),
                mapping = aes(y = Tumor, x = compPicked, fill = compPicked)) +
@@ -1154,7 +1154,7 @@ server <- function(input, output,session) {
                                        "Treatment" = raspPalette[1],
                                        "Difference" = raspPalette[3]))
       })
-
+      
       output$compGender <- renderPlot({
         localData %>%
           mutate(genderCat = case_when(
@@ -1180,7 +1180,7 @@ server <- function(input, output,session) {
           labs(title = "Comparison of Gender",
                fill = "Gender")
       })
-
+      
       output$compColor <- renderPlot({
         localData %>%
           mutate(colorCat = case_when(
@@ -1210,7 +1210,7 @@ server <- function(input, output,session) {
       })
     }
   })
-
+  
   ## Display computer selected data ----
   observeEvent(input$getCompData, {
     if (input$getCompData %% 2 == 0){
@@ -1243,7 +1243,7 @@ server <- function(input, output,session) {
       )
     }
   })
-
+  
   # #use the "model" function and input theta
   # TuM <- model(data, val, input$theta)
   #
