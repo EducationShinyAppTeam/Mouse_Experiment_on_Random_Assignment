@@ -783,7 +783,7 @@ server <- function(input, output,session) {
           
           stmt <- boastUtils::generateStatement(
             session,
-            verb = "interacted",
+            verb = "answered",
             object = x,
             description = "Hand selected a mouse.",
             response = jsonlite::toJSON(list(mouse = index, data = localData[index, ]), auto_unbox = TRUE)
